@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield | Advanced Wi-Fi Security Analyser</title>
+  <meta name="description" content="CyberShield - Professional Wi-Fi Security Analyser, Spectrum Auditor, Rogue AP Detector, and Cryptographic Security Engine for Windows.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Top Background Ambient Glows -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Header Section -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M5 10a9.98 9.98 0 0 1 14 0"/>
+          <path d="M8.5 13.5a5 5 0 0 1 7 0"/>
+          <circle cx="12" cy="17" r="1"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">CYBER<span class="highlight">SHIELD</span></span>
+        <span class="brand-subtitle">Wi-Fi Security Analyser & Spectrum Auditor</span>
+      </div>
+    </div>
+
+    <div class="nav-controls">
+      <div class="status-pill" id="liveStatusPill">
+        <span class="pulse-dot"></span>
+        <span id="liveStatusText">WLAN Ready</span>
+      </div>
+      <button class="btn btn-secondary" id="btnExport" title="Export Security Audit Report as JSON">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Export Audit
+      </button>
+      <button class="btn btn-primary" id="btnScan">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M23 4v6h-6M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+        </svg>
+        <span id="btnScanLabel">Scan Spectrum</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main App Container -->
+  <main class="dashboard-container">
+
+    <!-- Rogue AP / Threat Notification Banner (Hidden by default, shown if threat found) -->
+    <div class="alert-banner" id="rogueAlertBanner" style="display: none;">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <h4 id="rogueAlertTitle">Rogue Access Point / Evil Twin Warning</h4>
+        <p id="rogueAlertDesc">Multiple BSSIDs detected with mismatched security suites for the same SSID.</p>
+      </div>
+      <button class="alert-dismiss" onclick="document.getElementById('rogueAlertBanner').style.display='none'">✕</button>
+    </div>
+
+    <!-- Top Key Metrics Cards Grid -->
+    <section class="metrics-grid">
+      <!-- Metric 1: Airspace Health -->
+      <div class="metric-card glass-panel">
+        <div class="metric-header">
+          <span class="metric-label">Airspace Security Health</span>
+          <span class="metric-icon cyan">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </span>
+        </div>
+        <div class="metric-body">
+          <div class="health-display">
+            <span class="health-score" id="airspaceHealth">--</span>
+            <span class="health-total">/100</span>
+          </div>
+          <span class="badge" id="airspaceBadge">Analysing...</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar cyan-bar" id="airspaceProgress" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Metric 2: Active Connection Posture -->
+      <div class="metric-card glass-panel">
+        <div class="metric-header">
+          <span class="metric-label">Active Connection Security</span>
+          <span class="metric-icon green">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>
+            </svg>
+          </span>
+        </div>
+        <div class="metric-body">
+          <div class="active-ssid-box">
+            <span class="active-ssid-name" id="currentSsidName">Checking...</span>
+            <span class="active-cipher" id="currentCipher">--</span>
+          </div>
+          <div class="active-grade-pill" id="currentGradeBadge">--</div>
+        </div>
+        <div class="metric-subtext" id="currentLinkRate">Link Speed: -- Mbps</div>
+      </div>
+
+      <!-- Metric 3: Threat Count -->
+      <div class="metric-card glass-panel">
+        <div class="metric-header">
+          <span class="metric-label">Vulnerability Breakdown</span>
+          <span class="metric-icon red">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </span>
+        </div>
+        <div class="metric-body threat-stats">
+          <div class="threat-stat">
+            <span class="threat-num red-text" id="criticalCount">0</span>
+            <span class="threat-type">Critical</span>
+          </div>
+          <div class="threat-stat">
+            <span class="threat-num orange-text" id="highCount">0</span>
+            <span class="threat-type">High</span>
+          </div>
+          <div class="threat-stat">
+            <span class="threat-num amber-text" id="warningCount">0</span>
+            <span class="threat-type">Moderate</span>
+          </div>
+          <div class="threat-stat">
+            <span class="threat-num green-text" id="safeCount">0</span>
+            <span class="threat-type">Secure</span>
+          </div>
+        </div>
+        <div class="metric-subtext" id="totalApsCount">Scanning nearby access points...</div>
+      </div>
+
+      <!-- Metric 4: Spectrum Congestion -->
+      <div class="metric-card glass-panel">
+        <div class="metric-header">
+          <span class="metric-label">2.4 GHz Channel Overlap</span>
+          <span class="metric-icon amber">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+          </span>
+        </div>
+        <div class="metric-body">
+          <span class="health-score amber-text" id="interferingAps">0</span>
+          <span class="badge badge-amber" id="congestionBadge">Good Airspace</span>
+        </div>
+        <div class="metric-subtext">Co-channel interference on non-standard channels</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-spectrum">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/>
+        </svg>
+        Visible Networks & Threats
+      </button>
+      <button class="tab-btn" data-tab="tab-channels">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+        Spectrum & Channels
+      </button>
+      <button class="tab-btn" data-tab="tab-diagnostics">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+        Connected Deep Diagnostics
+      </button>
+      <button class="tab-btn" data-tab="tab-profiles">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Saved Profiles Audit
+      </button>
+      <button class="tab-btn" data-tab="tab-password">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Passphrase Entropy Lab
+      </button>
+    </nav>
+
+    <!-- TAB 1: Spectrum & Visible Networks -->
+    <section class="tab-content active" id="tab-spectrum">
+      <!-- Filter Bar -->
+      <div class="filter-bar glass-panel">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="networkSearchInput" placeholder="Filter by SSID, BSSID, or Hardware Vendor...">
+        </div>
+        <div class="filter-actions">
+          <select id="riskFilter" class="custom-select">
+            <option value="all">All Security Levels</option>
+            <option value="critical">🚨 Critical Risk (Open)</option>
+            <option value="high">⚠️ High Risk (WEP/WPA1)</option>
+            <option value="moderate">⚡ Moderate Risk (Mixed/TKIP)</option>
+            <option value="safe">🛡️ Secure Only (Grade A/A+)</option>
+          </select>
+          <select id="bandFilter" class="custom-select">
+            <option value="all">All Frequency Bands</option>
+            <option value="2.4 GHz">2.4 GHz</option>
+            <option value="5 GHz">5 GHz</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Networks Table Card -->
+      <div class="table-container glass-panel">
+        <table class="cyber-table" id="networksTable">
+          <thead>
+            <tr>
+              <th>Network (SSID)</th>
+              <th>Hardware BSSID & Vendor</th>
+              <th>Signal Quality</th>
+              <th>Frequency / Band</th>
+              <th>Security Suite</th>
+              <th>Threat Grade</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="networksTableBody">
+            <tr class="loading-row">
+              <td colspan="7">
+                <div class="scanner-loader">
+                  <div class="radar-spinner"></div>
+                  <span>Intercepting Wi-Fi 802.11 beacon frames...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: Channels & Spectrum Visualizer -->
+    <section class="tab-content" id="tab-channels">
+      <div class="spectrum-visualizer-container glass-panel">
+        <div class="panel-header">
+          <div>
+            <h3>2.4 GHz Wi-Fi Spectrum Distribution</h3>
+            <p class="panel-subtitle">Channels 1, 6, and 11 are non-overlapping. Overlapping channels cause co-channel packet collisions.</p>
+          </div>
+          <div class="spectrum-legend">
+            <span class="legend-item"><span class="legend-dot dot-green"></span>Recommended (1, 6, 11)</span>
+            <span class="legend-item"><span class="legend-dot dot-amber"></span>Interfering Channels</span>
+          </div>
+        </div>
+        <div class="spectrum-chart-wrapper">
+          <canvas id="channelChart24" height="240"></canvas>
+        </div>
+      </div>
+
+      <div class="spectrum-visualizer-container glass-panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <div>
+            <h3>5 GHz Frequency Band Distribution</h3>
+            <p class="panel-subtitle">High-throughput channels with reduced interference and wider channel widths (40/80/160 MHz).</p>
+          </div>
+        </div>
+        <div class="spectrum-chart-wrapper">
+          <canvas id="channelChart5" height="180"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Connected Network Deep Diagnostics -->
+    <section class="tab-content" id="tab-diagnostics">
+      <div class="diagnostics-grid">
+        <!-- Interface & Physical Link Card -->
+        <div class="diag-card glass-panel">
+          <div class="diag-card-header">
+            <h4>Physical Interface & Link</h4>
+            <span class="diag-tag" id="diagConnState">Connected</span>
+          </div>
+          <div class="diag-list">
+            <div class="diag-item">
+              <span class="diag-key">Interface Adapter</span>
+              <span class="diag-val" id="diagAdapterName">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Connected SSID</span>
+              <span class="diag-val font-mono" id="diagSsid">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Access Point BSSID</span>
+              <span class="diag-val font-mono" id="diagBssid">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Radio Protocol</span>
+              <span class="diag-val" id="diagRadio">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Operational Channel</span>
+              <span class="diag-val" id="diagChannel">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Tx / Rx Link Rate</span>
+              <span class="diag-val" id="diagRates">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- IP & Routing Diagnostics Card -->
+        <div class="diag-card glass-panel">
+          <div class="diag-card-header">
+            <h4>IP Configuration & Latency</h4>
+            <span class="diag-tag tag-cyan">IPv4 Routing</span>
+          </div>
+          <div class="diag-list">
+            <div class="diag-item">
+              <span class="diag-key">Client Assigned IPv4</span>
+              <span class="diag-val font-mono" id="diagIp">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Subnet Mask</span>
+              <span class="diag-val font-mono" id="diagMask">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Default Gateway</span>
+              <span class="diag-val font-mono" id="diagGateway">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Gateway Ping RTT</span>
+              <span class="diag-val font-mono green-text" id="diagPing">-- ms</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">DHCP Protocol</span>
+              <span class="diag-val" id="diagDhcp">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DNS & Cryptographic Security Card -->
+        <div class="diag-card glass-panel">
+          <div class="diag-card-header">
+            <h4>DNS Privacy & Cryptographic Suites</h4>
+            <span class="diag-tag" id="diagDnsSecurityTag">Analysing</span>
+          </div>
+          <div class="diag-list">
+            <div class="diag-item">
+              <span class="diag-key">Active Authentication</span>
+              <span class="diag-val" id="diagAuth">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Cipher Suite</span>
+              <span class="diag-val font-mono" id="diagCipher">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Configured DNS Servers</span>
+              <span class="diag-val font-mono" id="diagDnsList">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">DNS Privacy Assessment</span>
+              <span class="diag-val" id="diagDnsAssessment">--</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">Protected Management Frames (802.11w)</span>
+              <span class="diag-val" id="diagPmf">Supported</span>
+            </div>
+            <div class="diag-item">
+              <span class="diag-key">FIPS 140-2 Mode</span>
+              <span class="diag-val" id="diagFips">Supported</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Saved Profiles Audit -->
+    <section class="tab-content" id="tab-profiles">
+      <div class="panel-card glass-panel">
+        <div class="panel-header">
+          <div>
+            <h3>Saved Wi-Fi Profiles & Roaming Exposure</h3>
+            <p class="panel-subtitle">Windows automatically probes for saved networks. Auto-connecting to open profiles makes devices vulnerable to Evil Twin honeypots.</p>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="cyber-table">
+            <thead>
+              <tr>
+                <th>Profile Name</th>
+                <th>Auto-Connect Status</th>
+                <th>Authentication Suite</th>
+                <th>Cipher</th>
+                <th>MAC Randomization</th>
+                <th>Risk Evaluation</th>
+              </tr>
+            </thead>
+            <tbody id="profilesTableBody">
+              <tr><td colspan="6" class="text-center">Loading stored profiles...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Passphrase Strength & Entropy Lab -->
+    <section class="tab-content" id="tab-password">
+      <div class="pass-lab-container">
+        <div class="pass-input-card glass-panel">
+          <h3>Interactive WPA Pre-Shared Key (PSK) Security Lab</h3>
+          <p class="panel-subtitle">Test passphrase resistance against offline dictionary and GPU brute-force attacks (WPA 4-way handshake cracking).</p>
+
+          <div class="pass-form-group">
+            <label for="passInput">Enter Candidate Passphrase</label>
+            <div class="pass-input-wrapper">
+              <input type="password" id="passInput" placeholder="Type a Wi-Fi passphrase to test..." autocomplete="off">
+              <button class="toggle-pass-btn" id="togglePassBtn" type="button">👁️</button>
+            </div>
+          </div>
+
+          <div class="entropy-meter-wrapper">
+            <div class="entropy-meter-bar">
+              <div class="entropy-fill" id="entropyFill" style="width: 0%"></div>
+            </div>
+            <div class="entropy-labels">
+              <span id="passVerdictText">Waiting for input...</span>
+              <span id="passBitsText">0.0 bits entropy</span>
+            </div>
+          </div>
+
+          <div class="pass-stats-grid">
+            <div class="pass-stat-item">
+              <span class="stat-title">Passphrase Length</span>
+              <span class="stat-value font-mono" id="statPassLength">0 chars</span>
+            </div>
+            <div class="pass-stat-item">
+              <span class="stat-title">Character Pool</span>
+              <span class="stat-value font-mono" id="statPoolSize">0</span>
+            </div>
+            <div class="pass-stat-item">
+              <span class="stat-title">Estimated Crack Time (8x RTX 4090 GPU)</span>
+              <span class="stat-value font-mono green-text" id="statCrackTime">Instant</span>
+            </div>
+          </div>
+
+          <div class="pass-reqs" id="passReqsList">
+            <!-- Dynamic checks (length, upper, digits, symbols) -->
+          </div>
+        </div>
+
+        <div class="pass-guidelines-card glass-panel">
+          <h4>Wi-Fi Alliance Passphrase Standards</h4>
+          <ul class="cyber-checklist">
+            <li>
+              <strong>Minimum Length:</strong> WPA2/WPA3 pre-shared keys require at least 8 characters, but 16+ characters are strongly recommended to defeat PBKDF2 dictionary attacks.
+            </li>
+            <li>
+              <strong>WPA3 SAE Advantage:</strong> WPA3 utilizes Simultaneous Authentication of Equals (Dragonfly handshake), preventing offline dictionary cracking even if weak passwords are used.
+            </li>
+            <li>
+              <strong>Entropy Factor:</strong> Passphrases containing mixed case, numbers, and special symbols provide over 80+ bits of entropy, rendering brute-force attacks computationally impossible.
+            </li>
+            <li>
+              <strong>Avoid Default Router SSIDs & Passwords:</strong> Factory default credentials for routers are often generated via known vendor algorithms.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Network Inspection Modal Dialog -->
+  <div class="modal-overlay" id="networkModal" style="display: none;">
+    <div class="modal-window glass-panel">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-badge-grade" id="modalGrade">A</div>
+          <div>
+            <h3 id="modalSsid">[Network Name]</h3>
+            <span class="modal-subtitle font-mono" id="modalBssid">00:00:00:00:00:00</span>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Network Details Grid -->
+        <div class="modal-section">
+          <h4 class="section-title">Network Details & Parameters</h4>
+          <div class="modal-specs-grid">
+            <div class="spec-card">
+              <span class="spec-label">Network (SSID)</span>
+              <span class="spec-value" id="modalDetailSsid">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Access Point BSSID</span>
+              <span class="spec-value font-mono" id="modalDetailBssid">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Signal Quality</span>
+              <span class="spec-value" id="modalSignal">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Operational Channel</span>
+              <span class="spec-value" id="modalChannel">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Frequency Band</span>
+              <span class="spec-value" id="modalBand">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Security Protocol</span>
+              <span class="spec-value" id="modalAuth">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Encryption Cipher</span>
+              <span class="spec-value font-mono" id="modalCipher">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Risk Evaluation</span>
+              <span class="spec-value" id="modalRisk">--</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">CyberShield Score</span>
+              <span class="spec-value font-mono cyan-text" id="modalScore">-- / 100</span>
+            </div>
+            <div class="spec-card">
+              <span class="spec-label">Hardware Vendor (OUI)</span>
+              <span class="spec-value" id="modalVendor">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Explanation -->
+        <div class="modal-section">
+          <h4 class="section-title">Security Posture Explanation</h4>
+          <div class="spec-card" style="padding: 1rem; border-left: 3px solid var(--accent-cyan); background: rgba(0, 242, 254, 0.04);">
+            <p id="modalExplanation" style="font-size: 0.88rem; line-height: 1.6; color: var(--text-main); margin-bottom: 0.4rem;">--</p>
+            <span style="font-size: 0.72rem; color: var(--text-dim); display: block;">* Evaluated using the CyberShield Project-Defined Risk Assessment Model (Defensive Analysis Baseline).</span>
+          </div>
+        </div>
+
+        <!-- Security Recommendation -->
+        <div class="modal-section">
+          <h4 class="section-title">Security Recommendation</h4>
+          <div class="spec-card" style="padding: 1rem; border-left: 3px solid var(--accent-green); background: rgba(5, 223, 114, 0.04);">
+            <div id="modalRecommendation" style="font-size: 0.88rem; font-weight: 600; color: var(--accent-green); line-height: 1.5;">
+              Use WPA3 or WPA2-AES/CCMP and avoid legacy WEP or open authentication.
+            </div>
+            <ul class="recommendation-list" id="modalRecList" style="margin-top: 0.6rem;">
+              <li>Keep router firmware updated with latest security patches.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Vulnerabilities List -->
+        <div class="modal-section">
+          <h4 class="section-title">Identified Vulnerabilities & Risks</h4>
+          <div class="vuln-cards-container" id="modalVulnList">
+            <div class="vuln-empty">No critical vulnerabilities detected on this access point.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modalDismissBtn">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="cyber-footer">
+    <div class="footer-content">
+      <span>CyberShield Wi-Fi Security Analyser • Defensive WLAN Auditor</span>
+      <span>Operating System: Windows WLAN Subsystem • IEEE 802.11 Diagnostic Engine</span>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
