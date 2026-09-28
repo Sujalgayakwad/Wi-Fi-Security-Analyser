@@ -45,25 +45,34 @@ CyberShield audits wireless access points, evaluates encryption protocols agains
 ## 🏗️ Project Architecture
 
 ```
-MiniProject/
-├── app.py                  # Main Flask Web Server & REST API backend
-├── cli.py                  # Rich terminal CLI security auditor
-├── run.bat                 # 1-click Windows launcher
-├── requirements.txt        # Python package dependencies
+Wi-Fi-Security-Analyser/
+│
+├── app.py
+├── cli.py
+├── run.bat
+├── requirements.txt
+├── README.md
+│
+├── screenshots/
+│   ├── dashboard.png
+│   └── networks.png
+│
 ├── core/
-│   ├── __init__.py         # Package exports
-│   ├── scanner.py          # Native netsh WLAN scanner & parser
-│   ├── security_engine.py  # Risk scoring, vulnerability evaluator & rogue AP heuristics
-│   ├── connection_info.py  # Network adapter, gateway ping, DNS privacy & driver audit
-│   ├── profile_auditor.py  # Stored profile security & password entropy engine
-│   └── oui_lookup.py       # Hardware vendor (OUI) lookup
+│   ├── __init__.py
+│   ├── scanner.py
+│   ├── security_engine.py
+│   ├── connection_info.py
+│   ├── profile_auditor.py
+│   └── oui_lookup.py
+│
 ├── static/
 │   ├── css/
-│   │   └── style.css       # Cybersecurity SOC dashboard design system (Vanilla CSS)
+│   │   └── style.css
 │   └── js/
-│       └── app.js          # Interactive dashboard logic, canvas charts, filters & modal
+│       └── app.js
+│
 └── templates/
-    └── index.html          # Web dashboard layout
+    └── index.html
 ```
 
 ---
@@ -111,6 +120,19 @@ Double-click `run.bat` in File Explorer or run:
 ```
 
 ---
+
+<p align="center">
+  <img src="screenshots/dashboard.png" alt="CyberShield Dashboard" width="95%">
+</p>
+
+### 📡 Wi-Fi Network & Spectrum Analysis
+
+The network analysis view displays discovered SSIDs, BSSIDs, hardware vendors, signal quality, frequency bands, security suites, and threat grades.
+
+<p align="center">
+  <img src="screenshots/networks.png" alt="Wi-Fi Network and Spectrum Analysis" width="95%">
+</p>
+
 
 ## 🔒 Security Grading Standards
 
