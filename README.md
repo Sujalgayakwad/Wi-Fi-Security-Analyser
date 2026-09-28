@@ -122,7 +122,7 @@ Double-click `run.bat` in File Explorer or run:
 ---
 
 <p align="center">
-  <img src="screenshots/dashboard.png" alt="CyberShield Dashboard" width="95%">
+  <img src="screenshots/dashboard.png.jpeg" alt="CyberShield Dashboard" width="95%">
 </p>
 
 ### 📡 Wi-Fi Network & Spectrum Analysis
@@ -130,7 +130,7 @@ Double-click `run.bat` in File Explorer or run:
 The network analysis view displays discovered SSIDs, BSSIDs, hardware vendors, signal quality, frequency bands, security suites, and threat grades.
 
 <p align="center">
-  <img src="screenshots/networks.png" alt="Wi-Fi Network and Spectrum Analysis" width="95%">
+  <img src="screenshots/networks.png.jpeg" alt="Wi-Fi Network and Spectrum Analysis" width="95%">
 </p>
 
 
