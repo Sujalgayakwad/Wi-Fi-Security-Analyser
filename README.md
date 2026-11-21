@@ -1,78 +1,91 @@
-# 🛡️ CyberShield - Wi-Fi Security Analyser & Spectrum Auditor
+# 🛡️ NetGuard — Wi-Fi Cybersecurity Platform & Spectrum Auditor
 
-A professional, high-performance **Wi-Fi Security Analyser, Spectrum Auditor, and Threat Assessment Engine** designed for Windows.
+[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.6-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![SQLite](https://img.shields.io/badge/SQLite-3.49-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-CyberShield audits wireless access points, evaluates encryption protocols against modern cybersecurity standards (NIST, CIS, Wi-Fi Alliance), detects potential Evil-Twin / Rogue APs, analyzes channel congestion, and assesses client-side roaming and DNS privacy risks.
+An enterprise-grade, high-performance **Wi-Fi Security Analysis, Spectrum Auditor, and Threat Assessment Platform** built with **Java Spring Boot** and a responsive modern web dashboard.
+
+NetGuard audits wireless access points, evaluates encryption protocols against modern cybersecurity standards (NIST, CIS, Wi-Fi Alliance), detects potential Evil-Twin and Rogue AP attacks, discovers connected devices with an authorized allowlist, measures ICMP latency and jitter, provides an AI security assistant, and generates downloadable audit reports.
 
 ---
 
 ## 🌟 Key Features
 
 ### 1. 🛰️ Deep Wi-Fi Spectrum & Access Point Scanner
-- **Live Discovery**: Discovers all visible SSIDs, BSSIDs (MAC addresses), signal strength (percentage and approximate dBm), frequency band (2.4 GHz vs 5 GHz), channel numbers, and 802.11 standards (802.11b/g/n/ac/ax).
-- **Hardware Vendor Identification (OUI)**: Resolves MAC prefixes to device manufacturers (Realtek, Intel, Cisco, Ubiquiti, TP-Link, Netgear, Apple, etc.).
+- **Real-Time Airspace Discovery**: Discovers all visible SSIDs, BSSIDs (hardware MACs), signal strengths (percentage and calculated dBm RSSI), frequency bands (2.4 GHz, 5 GHz, 6 GHz), and Wi-Fi channels.
+- **Hardware Vendor Resolution (OUI)**: Resolves MAC prefixes to device manufacturers (Intel, Realtek, Cisco, Ubiquiti, TP-Link, Netgear, Apple, Samsung, etc.).
 - **Cryptographic Suite Auditing**: Flags Open/Unencrypted networks, deprecated WEP RC4 ciphers, legacy WPA1/TKIP, standard WPA2-CCMP, and modern WPA3-SAE (Simultaneous Authentication of Equals).
+- **Search, Filter & Sorting**: Dynamically sort networks by signal, score, channel, band, or SSID with instant search filtering.
 
-### 2. 🚨 Automated Threat Grading & Rogue AP Detection
-- **Airspace Health Score**: Aggregated 0–100 security index for the local radio environment.
-- **Vulnerability Breakdown**: Each network is assigned a security letter grade (`A+`, `A`, `B`, `C`, `D`, `F`) with detailed CVE/CWE definitions and remediation guidance.
-- **Evil Twin / Rogue AP Detection**: Flags situations where multiple APs broadcast identical SSIDs with differing security suites (e.g. an open rogue clone imitating a secure network).
-- **Hidden SSID Privacy Warnings**: Identifies hidden SSIDs and warns about client probe-request tracking risks.
+### 2. 🚨 Threat Detection & Evil Twin Radar
+- **Evil Twin Identification**: Flags duplicate SSIDs operating on disparate BSSIDs with conflicting security standards or suspicious RSSI variances.
+- **Rogue AP Detection**: Detects unauthorized access points advertising network configurations identical to authorized infrastructure.
+- **Spectral Anomaly Detection**: Statistical Z-score heuristic analysis across observable radio spectrum parameters.
 
-### 3. 📊 Visual Channel Spectrum Analyzer
-- **Interactive 2.4 GHz & 5 GHz Distribution**: Real-time canvas visualization of active channels.
-- **Interference Detector**: Highlights co-channel collisions and non-standard channel overlap (outside non-overlapping channels 1, 6, and 11).
+### 3. 🛡️ Dynamic Wi-Fi Security Score (0–100)
+- **Objective Grading**: Computes an airspace and network security score based on encryption strength, authentication ciphers, PMF compliance, and rogue presence.
+- **Classification Categories**:
+  - 🟢 **Excellent (90–100)**: WPA3-Personal/Enterprise with PMF
+  - 🔵 **Good (75–89)**: Robust WPA2-AES/CCMP
+  - 🟡 **Moderate (50–74)**: Weak signal, legacy settings, or channel congestion
+  - 🟠 **Poor (30–49)**: WPA/TKIP or mixed legacy modes
+  - 🔴 **Critical (<30)**: Open broadcast or deprecated WEP
 
-### 4. 🔒 Connected Network Deep Diagnostics
-- **Active Connection Auditing**: Analyzes current Wi-Fi interface, link speed (Tx/Rx Mbps), and signal quality.
-- **Gateway & Routing**: Measures gateway latency (RTT ping).
-- **DNS Security & Privacy Check**: Distinguishes between unencrypted local/ISP DNS and encrypted/high-reputation secure resolvers (Cloudflare, Quad9, Google).
-- **Driver Security Capabilities**: Checks for Protected Management Frames (PMF / 802.11w) and FIPS 140-2 support.
+### 4. 💻 Connected Device Intelligence & Allowlist
+- **Subnet Device Discovery**: Probes authorized network subnets using ARP and ICMP table analysis.
+- **Device Fingerprinting**: Displays IP address, MAC address, hostname, and manufacturer vendor.
+- **Trusted Hardware Allowlist**: 1-click toggling (`/api/devices/{id}/trust`) to approve known hardware and highlight untrusted or rogue devices.
 
-### 5. 💾 Saved Profiles & Auto-Connect Audit
-- Audits stored Wi-Fi profiles in Windows.
-- Alerts on dangerous settings (such as auto-connecting to open Wi-Fi networks).
-- Audits MAC address randomization status.
+### 5. ⚡ Network Performance, Latency & Jitter
+- **ICMP Ping Telemetry**: Active round-trip time (RTT) measurements yielding minimum, maximum, and average latency.
+- **Jitter & Packet Loss**: Measures connection variance and packet loss percentage to calculate a **Connection Quality Score (0–100)**.
+- **Live Bandwidth Telemetry**: Captures real-time RX/TX upload and download rates via system network interface counters (`netstat -e`).
 
-### 6. 🔑 WPA Pre-Shared Key (PSK) Entropy Lab
-- Interactive password testing tool measuring Shannon entropy bits, character space pool, and GPU cluster (8x RTX 4090) brute-force cracking resistance.
+### 6. 🤖 AI-Powered Cybersecurity Assistant & Chat
+- **Interactive Security Chat**: Ask natural-language questions about your Wi-Fi environment, encryption types, or threat alerts.
+- **Tailored Remediation**: Explains identified risks in simple terms and provides router hardening advice without external cloud dependencies.
 
-### 7. 📄 One-Click Audit Export
-- Instantly export complete audit findings as structured JSON for compliance, archiving, or reporting.
+### 7. 🔑 Wi-Fi Password Extraction & Offline QR Code
+- **Connected Credential Recovery**: Direct retrieval of the connected Wi-Fi password with **Show / Hide** and **1-Click Copy** buttons.
+- **QR Code Sharing**: Integrated offline QR code generator (`/qrcode.js`) for rapid mobile connection without revealing plaintext passwords.
+
+### 8. 📋 Router Hardening Checklist & Knowledge Base
+- **Hardening Checklist**: Step-by-step guidance on disabling WPS, updating firmware, changing default credentials, and isolating guest networks.
+- **Threat Intelligence & Tip of the Day**: Curated cybersecurity articles covering Evil Twin attacks, PMF (802.11w), and WPA3 dragonfly handshakes.
+
+### 9. 📄 Multi-Format Export & Reporting
+- **RFC-4180 CSV Export**: Complete scan table download for spreadsheet analysis.
+- **Structured JSON Audit**: Full system audit state export for compliance and archival.
+- **Printable PDF Security Report**: Dedicated `@media print` layout and modal preview for generating executive audit reports.
 
 ---
 
-## 🏗️ Project Architecture
+## 🏗️ Architecture & Project Structure
 
 ```
 Wi-Fi-Security-Analyser/
-│
-├── app.py
-├── cli.py
-├── run.bat
-├── requirements.txt
-├── README.md
-│
+├── src/
+│   └── main/
+│       ├── java/com/netguard/
+│       │   ├── NetGuardApplication.java   # Spring Boot REST API & SQLite Controller
+│       │   └── WifiNetworkScanner.java    # Native Windows Wi-Fi, Ping, & ML Engine
+│       └── resources/
+│           └── application.properties     # Server configuration (Port 5001)
 ├── screenshots/
-│   ├── dashboard.png
-│   └── networks.png
-│
-├── core/
-│   ├── __init__.py
-│   ├── scanner.py
-│   ├── security_engine.py
-│   ├── connection_info.py
-│   ├── profile_auditor.py
-│   └── oui_lookup.py
-│
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── app.js
-│
-└── templates/
-    └── index.html
+│   ├── dashboard.png.jpeg                 # Dashboard UI preview
+│   └── networks.png.jpeg                  # Network analysis preview
+├── .mvn/                                  # Maven Wrapper files
+├── app.js                                 # Frontend state, charts, and API bindings
+├── index.html                             # Responsive cybersecurity single-page application
+├── styles.css                             # Dark/light theme styles & print formatting
+├── qrcode.js                              # Offline QR code generator library
+├── pom.xml                                # Maven project definition & dependencies
+├── run.bat                                # 1-Click Windows launcher script
+├── mvnw / mvnw.cmd                        # Maven wrapper executable
+└── README.md                              # Documentation
 ```
 
 ---
@@ -80,66 +93,86 @@ Wi-Fi-Security-Analyser/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Windows 10 or 11
-- Python 3.8+ (Python 3.14 supported)
-- Wi-Fi network interface enabled
+- **Operating System**: Windows 10 or 11
+- **Java**: JDK 17 or higher (tested with OpenJDK 17 and 21)
+- **Wi-Fi Interface**: Enabled wireless adapter
 
-### Installation
+### Installation & Launch
 
-1. Navigate to the project directory:
-   ```powershell
-   cd "d:\New folder\PROJECTSSUJAL\MiniProject"
-   ```
-
-2. (Optional) Install dependencies:
-   ```powershell
-   pip install -r requirements.txt
-   ```
-
----
-
-## 💻 Running the Application
-
-### Option A: Web Dashboard (Recommended)
-Launch the web interface:
-```powershell
-python app.py
-```
-Then open your browser at **[http://127.0.0.1:5050](http://127.0.0.1:5050)**.
-
-### Option B: Terminal CLI Audit
-For quick command-line audits:
-```powershell
-python cli.py
-```
-
-### Option C: 1-Click Launcher (Windows)
+#### Option A: 1-Click Launcher (Windows)
 Double-click `run.bat` in File Explorer or run:
 ```powershell
 .\run.bat
 ```
 
+#### Option B: Maven Wrapper (Command Line)
+```powershell
+# Run using the embedded Maven wrapper
+.\mvnw.cmd spring-boot:run
+```
+
+#### Option C: Executable JAR
+```powershell
+# Build the production JAR
+.\mvnw.cmd package -DskipTests
+
+# Run the packaged application
+java -jar target/netguard-1.0.0.jar
+```
+
+Once running, navigate to:
+👉 **[http://127.0.0.1:5001](http://127.0.0.1:5001)**
+
 ---
 
+## 📸 Screenshots
+
+### 🛡️ Real-Time Cybersecurity Dashboard
 <p align="center">
-  <img src="screenshots/dashboard.png.jpeg" alt="CyberShield Dashboard" width="95%">
+  <img src="screenshots/dashboard.png.jpeg" alt="NetGuard Dashboard" width="95%">
 </p>
 
-### 📡 Wi-Fi Network & Spectrum Analysis
-
-The network analysis view displays discovered SSIDs, BSSIDs, hardware vendors, signal quality, frequency bands, security suites, and threat grades.
-
+### 📡 Spectrum Analysis & Access Point Audit
 <p align="center">
-  <img src="screenshots/networks.png.jpeg" alt="Wi-Fi Network and Spectrum Analysis" width="95%">
+  <img src="screenshots/networks.png.jpeg" alt="Network Analysis" width="95%">
 </p>
 
+---
 
-## 🔒 Security Grading Standards
+## 🔌 API Endpoints Reference
 
-| Grade | Risk Level | Authentication / Cipher | Description |
-|:---:|:---:|:---:|:---|
-| **A+** | Secure | WPA3-Personal (SAE) / WPA3-Enterprise | Protected Management Frames, dragonfly handshake, forward secrecy. |
-| **A** | Good | WPA2-Personal (CCMP / AES) | Industry standard AES encryption. |
-| **B** | Fair | WPA2 with weak signal or mild interference | Secure encryption with environmental cautions. |
-| **D** | High Risk | WPA1 / TKIP | Deprecated protocol; susceptible to Beck-Tews and ChopChop attacks. |
-| **F** | Critical | Open / Unencrypted or WEP | RC4 stream cipher easily cracked; plaintext eavesdropping risk. |
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/` | Web UI Dashboard |
+| `GET` | `/api/dashboard` | Active Wi-Fi telemetry, stats, connected password, and threats |
+| `GET` | `/api/wifi/scan` | Scans all visible access points with channel, band, RSSI, and security score |
+| `GET` | `/api/threats` | Active threat analysis, Evil Twin detection, and rogue AP alerts |
+| `GET` | `/api/performance` | ICMP ping latency, jitter, packet loss %, and connection quality score |
+| `POST`| `/api/ai/chat` | AI cybersecurity assistant chat endpoint |
+| `GET` | `/api/ml/anomalies` | Statistical Z-score radio anomaly detection |
+| `GET` | `/api/devices` | Subnet device inventory with vendor resolution |
+| `POST`| `/api/devices/{id}/trust` | Toggles device allowlist trust status |
+| `GET` | `/api/traffic` | Real-time byte transfer rates (RX/TX KB/s) |
+| `GET` | `/api/alerts` | Security alert event log |
+| `POST`| `/api/alerts/clear` | Marks all alerts as read |
+| `GET` | `/api/wifi/compare` | Compares multiple access points side-by-side |
+| `GET` | `/api/security/checklist`| Router security hardening rules |
+| `GET` | `/api/knowledge` | Tip of the Day and cybersecurity intelligence articles |
+| `GET` | `/api/export/csv` | Download scan results as CSV |
+| `GET` | `/api/export/json` | Full structured security audit JSON export |
+| `GET` | `/qrcode.js` | Offline QR code library script |
+
+---
+
+## 🔒 Security & Privacy Notice
+
+NetGuard runs strictly in user mode on your authorized local hardware:
+- Passwords are recovered only for profiles already authorized and saved on the local Windows device.
+- Subnet scans are restricted to the local network gateway subnet.
+- No telemetry, keystrokes, or scan data are uploaded to third-party cloud services.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the LICENSE file for details.

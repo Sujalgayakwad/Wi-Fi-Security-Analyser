@@ -1,27 +1,20 @@
 @echo off
-title CyberShield - Wi-Fi Security Analyser
+title NetGuard - Wi-Fi Cybersecurity Platform
 color 0b
 echo =====================================================================
-echo          CYBERSHIELD WI-FI SECURITY ANALYSER ^& AUDITOR
+echo          NETGUARD WI-FI CYBERSECURITY PLATFORM
 echo =====================================================================
 echo.
-echo [1] Launch Interactive Web Dashboard (Recommended)
-echo [2] Run Terminal CLI Security Audit
-echo [3] Exit
+echo Starting NetGuard Server on http://127.0.0.1:5001 ...
+echo Opening browser...
+start http://127.0.0.1:5001
 echo.
-set /p choice="Select an option (1-3): "
 
-if "%choice%"=="1" (
-    echo.
-    echo Starting Web Server... Open your browser at http://127.0.0.1:5050
-    start http://127.0.0.1:5050
-    python app.py
-) else if "%choice%"=="2" (
-    echo.
-    echo Running Terminal Wi-Fi Security Audit...
-    python cli.py
-    echo.
-    pause
+if exist "target\netguard-1.0.0.jar" (
+    java -jar target\netguard-1.0.0.jar
+) else if exist "mvnw.cmd" (
+    call .\mvnw.cmd spring-boot:run
 ) else (
-    exit
+    mvn spring-boot:run
 )
+pause
