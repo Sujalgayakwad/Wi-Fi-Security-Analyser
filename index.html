@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   <meta name="theme-color" content="#06152c" />
   <title>NetGuard — Wi-Fi Cybersecurity Platform</title>
   <link rel="stylesheet" href="styles.css" />
@@ -48,8 +48,15 @@
       </div>
     </aside>
 
+    <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop"></div>
+
     <main class="main-content">
       <header class="topbar">
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation drawer">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
         <div class="mobile-brand">
           <div class="brand-mark">⌁</div><strong>NetGuard</strong>
         </div>
@@ -103,6 +110,7 @@
               <span class="password-val" id="wifi-pass-val-mobile">••••••••</span>
               <button type="button" class="pass-toggle-btn" id="toggle-pass-mobile" title="Reveal Wi-Fi Password">Show</button>
               <button type="button" class="pass-copy-btn" id="copy-pass-mobile" title="Copy Password">⧉</button>
+              <button type="button" class="pass-copy-btn" id="btn-quick-qr-mobile" title="Show Wi-Fi QR Code">📱 QR</button>
             </div>
           </div>
           <button class="detect-btn-pill" id="detect-wifi-btn-mobile" title="Recognize live connected Wi-Fi">↻ Detect</button>
@@ -255,6 +263,7 @@
                 <div class="pass-btn-group">
                   <button type="button" class="pass-toggle-btn" id="toggle-pass-desktop" title="Show / Hide Password">👁 Show</button>
                   <button type="button" class="pass-copy-btn" id="copy-pass-desktop" title="Copy Password to Clipboard">⧉ Copy</button>
+                  <button type="button" class="pass-copy-btn" id="btn-quick-qr-desktop" title="Show Wi-Fi QR Code">📱 QR Code</button>
                 </div>
               </div>
             </article>
@@ -827,54 +836,20 @@
         <div class="ai-chat-layout card">
           <div class="ai-chat-header">
             <div class="ai-avatar">✦</div>
-            <div>
+            <div style="flex:1">
               <strong>NetGuard Cyber AI</strong>
               <small class="muted" id="ai-chat-context-sub">Active Context: Connected Network Audit</small>
             </div>
+            <button type="button" class="secondary-button" id="btn-clear-ai-chat" style="padding:4px 10px;font-size:11px" title="Clear chat history">↻ Clear</button>
           </div>
 
           <!-- Quick Suggested Question Pills -->
           <div class="ai-suggested-pills" id="ai-quick-pills">
-            <button class="ai-pill-btn">Is my Wi-Fi network secure?</button>
-            <button class="ai-pill-btn">Why is my network marked as risky?</button>
-            <button class="ai-pill-btn">What does WPA3 mean?</button>
-            <button class="ai-pill-btn">How can I improve my router security?</button>
-            <button class="ai-pill-btn">Why am I receiving an Evil Twin warning?</button>
-          </div>
-
-          <!-- Chat Message Feed -->
-          <div class="ai-chat-messages" id="ai-chat-messages-container">
-            <div class="ai-msg bot">
-              <div class="msg-bubble">
-                Hello Sujal! I am your <strong>NetGuard AI Security Assistant</strong>. I have analyzed your active wireless environment and nearby airspace. Ask me anything about your security score, rogue AP threats, or router configuration!
-              </div>
-              <small class="msg-time">Just now</small>
-              
-          </div>
-
-          <!-- Chat Input -->
-          <form class="ai-chat-input-bar" id="ai-chat-form">
-            <input type="text" id="ai-chat-input" placeholder="Ask a security question (e.g. Is my network secure?)..." required autocomplete="off" />
-            <button type="submit" class="primary-button" id="ai-send-btn">Send ➔</button>
-          </form>
-        </div>
-
-        <div class="ai-chat-layout card">
-          <div class="ai-chat-header">
-            <div class="ai-avatar">✦</div>
-            <div>
-              <strong>NetGuard Cyber AI</strong>
-              <small class="muted" id="ai-chat-context-sub">Active Context: Connected Network Audit</small>
-            </div>
-          </div>
-
-          <!-- Quick Suggested Question Pills -->
-          <div class="ai-suggested-pills" id="ai-quick-pills">
-            <button class="ai-pill-btn">Is my Wi-Fi network secure?</button>
-            <button class="ai-pill-btn">Why is my network marked as risky?</button>
-            <button class="ai-pill-btn">What does WPA3 mean?</button>
-            <button class="ai-pill-btn">How can I improve my router security?</button>
-            <button class="ai-pill-btn">Why am I receiving an Evil Twin warning?</button>
+            <button type="button" class="ai-pill-btn">Is my Wi-Fi network secure?</button>
+            <button type="button" class="ai-pill-btn">Why is my network marked as risky?</button>
+            <button type="button" class="ai-pill-btn">What does WPA3 mean?</button>
+            <button type="button" class="ai-pill-btn">How can I improve my router security?</button>
+            <button type="button" class="ai-pill-btn">Why am I receiving an Evil Twin warning?</button>
           </div>
 
           <!-- Chat Message Feed -->
@@ -922,7 +897,7 @@
           </article>
 
           <!-- QR Code Wi-Fi Sharing -->
-          <article class="card panel">
+          <article class="card panel" id="qr-panel-card">
             <div class="panel-title">
               <div>
                 <p class="eyebrow">SECURE SHARING</p>
@@ -939,6 +914,10 @@
             <div class="qr-meta-wrap">
               <strong id="qr-net-name">Home_WiFi</strong>
               <small class="muted" id="qr-net-type">WPA2 Protected</small>
+            </div>
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:14px">
+              <button type="button" class="secondary-button" id="btn-save-qr" style="padding:6px 14px;font-size:11px">💾 Save QR Image</button>
+              <button type="button" class="secondary-button" id="btn-refresh-qr" style="padding:6px 14px;font-size:11px">↻ Refresh QR</button>
             </div>
           </article>
         </div>

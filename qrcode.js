@@ -292,14 +292,21 @@
   function QRPolynomial(num, shift) {
     var offset = 0;
     while (offset < num.length && num[offset] == 0) offset++;
-    this.num = new Array(num.length - offset + shift);
-    for (var i = 0; i < num.length - offset; i++) this.num[i] = num[i + offset];
+    var len = Math.max(0, num.length - offset + (shift || 0));
+    this.num = new Array(len);
+    for (var i = 0; i < num.length - offset; i++) {
+      this.num[i] = num[i + offset];
+    }
+    for (var i = num.length - offset; i < len; i++) {
+      this.num[i] = 0;
+    }
   }
   QRPolynomial.prototype = {
     get: function (index) { return this.num[index]; },
     getLength: function () { return this.num.length; },
     multiply: function (e) {
       var num = new Array(this.getLength() + e.getLength() - 1);
+      for (var i = 0; i < num.length; i++) num[i] = 0;
       for (var i = 0; i < this.getLength(); i++) {
         for (var j = 0; j < e.getLength(); j++) {
           num[i + j] ^= QRMath.gmult(this.get(i), e.get(j));
@@ -313,7 +320,10 @@
       var num = new Array(this.getLength());
       for (var i = 0; i < this.getLength(); i++) num[i] = this.get(i);
       for (var i = 0; i < e.getLength(); i++) {
-        num[i] ^= QRMath.gexp(QRMath.glog(e.get(i)) + ratio);
+        var val = e.get(i);
+        if (val !== 0) {
+          num[i] ^= QRMath.gexp(QRMath.glog(val) + ratio);
+        }
       }
       return new QRPolynomial(num, 0).mod(e);
     },
@@ -342,7 +352,7 @@
       QRMath.EXP_TABLE[i - 4] ^
       QRMath.EXP_TABLE[i - 5] ^
       QRMath.EXP_TABLE[i - 6] ^
-      QRMath.EXP_TABLE[i - 7];
+      QRMath.EXP_TABLE[i - 8];
   }
   for (var i = 0; i < 255; i++) QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]] = i;
 
@@ -488,13 +498,13 @@
   function renderQRCode(canvas, text, options) {
     if (!canvas || !canvas.getContext) return;
     options = options || {};
-    var size = options.size || 140;
+    var size = options.size || (options.scale ? options.scale * 36 : 160);
     var margin = options.margin !== undefined ? options.margin : 2;
-    var darkColor = options.dark || "#0a192f";
-    var lightColor = options.light || "#ffffff";
+    var darkColor = (options.color && options.color.dark) || options.dark || "#06152c";
+    var lightColor = (options.color && options.color.light) || options.light || "#ffffff";
 
     var qr = new QRCodeModel(0, 0); // Type 0: auto-detect, EC level 0: M (15%)
-    qr.addData(text);
+    qr.addData(text || "");
     qr.make();
 
     var moduleCount = qr.getModuleCount();
@@ -504,6 +514,7 @@
 
     var cellSize = size / (moduleCount + margin * 2);
 
+    ctx.clearRect(0, 0, size, size);
     ctx.fillStyle = lightColor;
     ctx.fillRect(0, 0, size, size);
 
@@ -527,11 +538,29 @@
     if (security && security.toUpperCase().includes("WEP")) type = "WEP";
     else if (!password || (security && security.toUpperCase().includes("OPEN"))) type = "nopass";
     var esc = function (s) { return (s || "").replace(/([\\;,:"])/g, "\\$1"); };
-    return "WIFI:S:" + esc(ssid) + ";T:" + type + ";P:" + esc(password) + ";;";
+    return "WIFI:T:" + type + ";S:" + esc(ssid) + ";P:" + esc(password) + ";;";
   }
 
-  global.NetGuardQR = {
+  function downloadQRCode(canvas, filename) {
+    if (!canvas) return;
+    try {
+      var link = document.createElement("a");
+      link.download = filename || "wifi-qrcode.png";
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      console.error("Failed to download QR code", e);
+    }
+  }
+
+  var api = {
     render: renderQRCode,
     wifiString: generateWifiQRString,
+    download: downloadQRCode,
   };
+
+  global.NetGuardQR = api;
+  global.QRCode = api;
 })(typeof window !== "undefined" ? window : globalThis);

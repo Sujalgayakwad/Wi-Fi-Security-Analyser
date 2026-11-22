@@ -272,7 +272,8 @@ function copyPasswordToClipboard(btn) {
 }
 
 // -------------------------------------------------------------
-// DEVICES RENDERING (Enhanced with MAC, Vendor, Host & Allowlist)
+// -------------------------------------------------------------
+// DEVICES RENDERING — Professional Device Management Panel
 // -------------------------------------------------------------
 function renderDevices(devices) {
   const cards = document.querySelector(".device-cards");
@@ -282,72 +283,176 @@ function renderDevices(devices) {
 
   const net = (dashboardData && dashboardData.network) || defaultDashboard.network;
   const isConnected = net.connected !== false && net.state !== "disconnected" && net.name !== "No Wi-Fi Connected";
-  const currentNetwork = isConnected ? (net.name || "Connected Wi-Fi") : "No Wi-Fi Connected";
+  const currentNetwork = isConnected ? (net.name || net.ssid || "Connected Wi-Fi") : "No Wi-Fi Connected";
 
   let onlineCount = 0;
   let hostFound = false;
   let gatewayFound = false;
 
+  // Device type icon map (using emoji + text)
+  const DEVICE_ICONS = {
+    router: { icon: "📡", label: "Router / Gateway", color: "#9365ff" },
+    phone: { icon: "📱", label: "Mobile Device", color: "#39e1d0" },
+    laptop: { icon: "💻", label: "Laptop / PC", color: "#258cff" },
+    tv: { icon: "📺", label: "Smart TV / IoT", color: "#f5c65e" },
+    tablet: { icon: "🖥️", label: "Tablet", color: "#32e8ad" },
+    printer: { icon: "🖨️", label: "Printer", color: "#ff667b" },
+    unknown: { icon: "⬡", label: "Unknown Device", color: "#89a0c2" },
+  };
+
   devices.forEach((device, index) => {
     const isOnline = isConnected && (device.status !== "offline");
     if (isOnline) onlineCount++;
     if (device.is_host) hostFound = true;
-    if (device.device_type === "router" || device.name?.includes("Gateway")) gatewayFound = true;
+    if (device.device_type === "router" || device.name?.toLowerCase().includes("gateway") || device.name?.toLowerCase().includes("router")) gatewayFound = true;
 
     const devType = device.device_type || (index === 0 ? "phone" : index === 1 ? "laptop" : "tv");
-    const iconClass = devType === "phone" ? "phone" : devType === "tv" ? "tv" : "laptop";
-    const iconText = devType === "phone" ? "▯" : devType === "tv" ? "▣" : "▱";
-    const wifiName = isConnected ? (device.connected_wifi || currentNetwork) : "No Wi-Fi Connected";
-    const statusVal = isConnected ? (device.status || "online") : "offline";
-    const macText = device.mac_address ? ` · MAC: ${device.mac_address}` : "";
-    const vendorText = device.vendor ? ` (${device.vendor})` : "";
+    const typeInfo = DEVICE_ICONS[devType] || DEVICE_ICONS.unknown;
     const isTrusted = device.is_trusted === 1 || device.is_trusted === true;
+    const isHost = device.is_host === 1 || device.is_host === true;
+    const wifiName = isConnected ? (device.connected_wifi || currentNetwork) : "No Wi-Fi";
+    const statusVal = isOnline ? "online" : "offline";
+    const vendor = device.vendor ? device.vendor : "";
+    const mac = device.mac_address || "";
 
+    // ── Main Device Card ──────────────────────────────────────
     if (cards) {
-      const card = element("article", "card big-device");
-      card.append(element("span", `device-illustration ${iconClass}`, iconText));
+      const card = document.createElement("article");
+      card.className = "device-pro-card";
+      card.dataset.deviceId = device.id;
 
-      const details = element("div", "device-info");
-      const statusRow = element("div", "device-status-row");
-      const statusDot = element("span", `status-dot ${statusVal === "online" ? "online" : "disconnected"}`);
-      const statusText = element("span", "status-text", ` ${statusVal}`);
-      const wifiChip = element("span", `device-wifi-chip ${isConnected ? "" : "disconnected"}`);
-      wifiChip.innerHTML = isConnected
-        ? `<span class="wifi-icon">📶</span> Connected to <strong>${wifiName}</strong>`
-        : `<span class="wifi-icon">✕</span> <strong>No Wi-Fi Connected</strong>`;
-      
-      const trustBtn = element("button", `trust-toggle-btn ${isTrusted ? "trusted" : ""}`, isTrusted ? "✓ Allowlisted" : "＋ Allowlist");
-      trustBtn.title = isTrusted ? "Mark as untrusted device" : "Add device to authorized allowlist";
+      // Status stripe on left edge
+      const stripe = document.createElement("div");
+      stripe.className = `device-status-stripe ${isOnline ? "stripe-online" : "stripe-offline"}`;
+      card.appendChild(stripe);
+
+      // Icon block
+      const iconBlock = document.createElement("div");
+      iconBlock.className = "device-icon-block";
+      iconBlock.style.background = `${typeInfo.color}18`;
+      iconBlock.style.borderColor = `${typeInfo.color}44`;
+      iconBlock.innerHTML = `<span class="device-icon-emoji">${typeInfo.icon}</span>`;
+      if (isHost) {
+        const hostBadge = document.createElement("span");
+        hostBadge.className = "device-host-badge";
+        hostBadge.textContent = "HOST";
+        iconBlock.appendChild(hostBadge);
+      }
+      card.appendChild(iconBlock);
+
+      // Info block
+      const infoBlock = document.createElement("div");
+      infoBlock.className = "device-info-block";
+
+      // Name row
+      const nameRow = document.createElement("div");
+      nameRow.className = "device-name-row";
+      const nameEl = document.createElement("h3");
+      nameEl.className = "device-name";
+      nameEl.textContent = device.name || "Unknown Device";
+      nameRow.appendChild(nameEl);
+
+      // Status pill
+      const statusPill = document.createElement("span");
+      statusPill.className = `device-status-pill ${isOnline ? "pill-online" : "pill-offline"}`;
+      statusPill.innerHTML = `<span class="pill-dot"></span>${isOnline ? "Online" : "Offline"}`;
+      nameRow.appendChild(statusPill);
+
+      if (isTrusted) {
+        const trustBadge = document.createElement("span");
+        trustBadge.className = "device-trusted-badge";
+        trustBadge.textContent = "✓ Trusted";
+        nameRow.appendChild(trustBadge);
+      }
+
+      infoBlock.appendChild(nameRow);
+
+      // Vendor / type subtitle
+      const subtitle = document.createElement("p");
+      subtitle.className = "device-subtitle";
+      subtitle.textContent = [vendor, typeInfo.label].filter(Boolean).join(" · ");
+      infoBlock.appendChild(subtitle);
+
+      // Meta grid
+      const metaGrid = document.createElement("div");
+      metaGrid.className = "device-meta-grid";
+
+      const metaItems = [
+        { label: "IP Address", value: device.ip_address || "—", icon: "🌐" },
+        { label: "MAC Address", value: mac || "—", icon: "🔑" },
+        { label: "Network", value: isConnected ? wifiName : "Disconnected", icon: "📶" },
+        { label: "Last Seen", value: device.last_seen || "Just now", icon: "🕐" },
+      ];
+
+      metaItems.forEach(({ label, value, icon }) => {
+        const cell = document.createElement("div");
+        cell.className = "device-meta-cell";
+        cell.innerHTML = `
+          <span class="meta-label">${icon} ${label}</span>
+          <span class="meta-value">${escapeHtml(value)}</span>
+        `;
+        metaGrid.appendChild(cell);
+      });
+      infoBlock.appendChild(metaGrid);
+
+      card.appendChild(infoBlock);
+
+      // Action column
+      const actionCol = document.createElement("div");
+      actionCol.className = "device-action-col";
+
+      const trustBtn = document.createElement("button");
+      trustBtn.className = `device-trust-btn ${isTrusted ? "trusted" : ""}`;
+      trustBtn.innerHTML = isTrusted
+        ? `<span>✓</span> Allowlisted`
+        : `<span>＋</span> Allowlist`;
+      trustBtn.title = isTrusted ? "Remove from authorized allowlist" : "Add to authorized allowlist";
       trustBtn.addEventListener("click", () => toggleDeviceTrust(device.id, trustBtn));
+      actionCol.appendChild(trustBtn);
 
-      statusRow.append(statusDot, statusText, wifiChip, trustBtn);
+      if (device.ip_address) {
+        const pingBtn = document.createElement("button");
+        pingBtn.className = "device-action-pill";
+        pingBtn.innerHTML = "⚡ Ping";
+        pingBtn.title = `Ping ${device.ip_address}`;
+        pingBtn.addEventListener("click", () => {
+          showMessage(`Pinging ${device.ip_address}…`, false);
+          pingBtn.disabled = true;
+          api("/api/performance/test", { method: "POST" })
+            .then(() => showMessage(`${device.ip_address} responded.`, false))
+            .catch(() => showMessage(`Could not ping ${device.ip_address}.`, true))
+            .finally(() => { pingBtn.disabled = false; });
+        });
+        actionCol.appendChild(pingBtn);
+      }
 
-      details.append(
-        statusRow,
-        element("h2", "", device.name + vendorText),
-        element("p", "device-platform", device.platform || "Standard Wi-Fi Client"),
-        element("small", "device-meta", isConnected
-          ? `${device.ip_address}${macText} · Seen ${device.last_seen || "recently"}`
-          : `${device.ip_address} · Device offline (No Wi-Fi)`),
-      );
-      card.append(details, element("button", "icon-button", "•••"));
-      cards.append(card);
+      card.appendChild(actionCol);
+      cards.appendChild(card);
     }
 
+    // ── Dashboard Mini List ───────────────────────────────────
     if (list) {
-      const dot = element("span", `device-dot ${iconClass}`);
+      const dot = element("span", `device-dot ${devType === "phone" ? "phone" : devType === "tv" ? "tv" : "laptop"}`);
       const nameWrap = element("span", "device-name-wrap");
       nameWrap.append(
-        element("strong", "", device.name),
+        element("strong", "", device.name || "Unknown"),
         element("small", `device-wifi-sub ${isConnected ? "" : "disconnected"}`, isConnected ? `Connected to ${wifiName}` : "No Wi-Fi Connected"),
       );
-      const address = element("b", "", isConnected ? device.ip_address : "Offline");
+      const address = element("b", "", isConnected ? (device.ip_address || "?") : "Offline");
       list.append(dot, nameWrap, address);
     }
   });
 
+  // Empty state
   if (devices.length === 0 && cards) {
-    cards.append(element("p", "muted", "No connected devices were discovered on this subnet."));
+    const empty = document.createElement("div");
+    empty.className = "device-empty-state";
+    empty.innerHTML = `
+      <div class="empty-icon">🔍</div>
+      <h3>No Devices Discovered</h3>
+      <p>No connected devices were found on this subnet. Click <strong>Refresh Subnet</strong> to scan again.</p>
+    `;
+    cards.appendChild(empty);
     if (list) list.append(element("span", "muted", "No connected devices"));
   }
 
@@ -575,6 +680,7 @@ function renderDashboard(data) {
   renderDevices(devices || defaultDashboard.devices);
   renderHistory(scans || defaultDashboard.scans);
   setSettings(dashboardData.settings || defaultDashboard.settings);
+  generateWifiQrCode();
 }
 
 // -------------------------------------------------------------
@@ -806,24 +912,46 @@ async function loadWifiNetworks() {
   if (scanTime) scanTime.textContent = "";
 
   try {
-    const result = await api("/api/wifi/networks");
+    // POST to /api/scan — this scans AND saves to the database
+    const result = await api("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trigger: "manual" }),
+    });
+
     cachedNetworks = result.networks || [];
     filterAndRenderWifiNetworks();
 
-    if (count) count.textContent = `${cachedNetworks.length} network${cachedNetworks.length === 1 ? "" : "s"} visible`;
-    if (scanTime) scanTime.textContent = `Scanned ${result.scannedAt}`;
+    const total = cachedNetworks.length;
+    if (count) count.textContent = `${total} network${total === 1 ? "" : "s"} visible`;
+    if (scanTime) scanTime.textContent = `Scanned ${result.scanned_at || "just now"} · Session #${result.sessionId || "?"}`;
     if (status) {
-      status.textContent = cachedNetworks.length
-        ? "Airspace survey complete. Select a network to inspect or compare."
-        : "No visible WiFi networks were detected in local physical range.";
+      status.textContent = total
+        ? `Airspace survey complete — ${total} network${total === 1 ? "" : "s"} recorded. Select a network to inspect or compare.`
+        : "No visible Wi-Fi networks were detected in local physical range.";
     }
 
     if (result.threats) {
       renderThreats(result.threats);
     }
+
+    // Refresh history to show newly saved scan
+    api("/api/history")
+      .then((scans) => renderHistory(scans))
+      .catch(() => {});
+
   } catch (error) {
-    if (count) count.textContent = "Scan unavailable";
-    if (status) status.textContent = `Nearby WiFi scanner is ready. Start the Java backend to scan live local access points.`;
+    // Fallback: try GET if POST fails (read-only display, won't save)
+    try {
+      const fallback = await api("/api/wifi/networks");
+      cachedNetworks = fallback.networks || [];
+      filterAndRenderWifiNetworks();
+      if (count) count.textContent = `${cachedNetworks.length} visible (not saved)`;
+      if (status) status.textContent = "Scan displayed but could not be saved to history. Check server connection.";
+    } catch (e2) {
+      if (count) count.textContent = "Scan unavailable";
+      if (status) status.textContent = "Wi-Fi scanner unavailable. Ensure the Flask backend is running on port 5001.";
+    }
   } finally {
     if (refreshButton) refreshButton.disabled = false;
   }
@@ -1210,19 +1338,53 @@ async function sendAiChatMessage(userQuestion) {
 
     // Render formatted response
     const botMsg = element("div", "ai-msg bot");
-    const formattedAnswer = formatMarkdownText(res.answer);
+    const formattedAnswer = formatMarkdownText(res.answer || "No response received.");
     botMsg.innerHTML = `
       <div class="msg-bubble">${formattedAnswer}</div>
       <small class="msg-time">${res.timestamp || "Just now"}</small>
     `;
     chatContainer.append(botMsg);
+
+    // Dynamic suggested questions from server
+    if (res.suggestedQuestions && res.suggestedQuestions.length > 0) {
+      const suggestWrap = element("div", "ai-msg bot ai-inline-suggestions");
+      suggestWrap.style.cssText = "display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;";
+      res.suggestedQuestions.forEach((sq) => {
+        const chip = element("button", "ai-pill-btn", sq);
+        chip.type = "button";
+        chip.style.cssText = "cursor:pointer;";
+        suggestWrap.append(chip);
+      });
+      chatContainer.append(suggestWrap);
+    }
+
     chatContainer.scrollTop = chatContainer.scrollHeight;
   } catch (err) {
     typingMsg.remove();
     const errEl = element("div", "ai-msg bot");
     errEl.innerHTML = `<div class="msg-bubble" style="border-color:var(--red);color:#ff8094">Unable to reach security AI: ${escapeHtml(err.message)}</div>`;
     chatContainer.append(errEl);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
   }
+}
+
+function clearAiChat() {
+  const chatContainer = document.querySelector("#ai-chat-messages-container");
+  if (!chatContainer) return;
+  chatContainer.innerHTML = `
+    <div class="ai-msg bot">
+      <div class="msg-bubble">
+        Hello Sujal! I am your <strong>NetGuard AI Security Assistant</strong>. I have analyzed your active wireless environment and nearby airspace. Ask me anything about your security score, rogue AP threats, or router configuration!
+      </div>
+      <small class="msg-time">Just now</small>
+    </div>
+  `;
+  const inputEl = document.querySelector("#ai-chat-input");
+  if (inputEl) {
+    inputEl.value = "";
+    inputEl.focus();
+  }
+  showMessage("AI conversation reset.", false);
 }
 
 function formatMarkdownText(text) {
@@ -1301,26 +1463,28 @@ async function loadKnowledge() {
 
 function generateWifiQrCode() {
   const canvas = document.querySelector("#qr-code-canvas");
-  if (!canvas || typeof QRCode === "undefined") return;
+  const qrLib = (typeof QRCode !== "undefined" ? QRCode : (typeof NetGuardQR !== "undefined" ? NetGuardQR : null));
+  if (!canvas || !qrLib) return;
 
   const net = (dashboardData && dashboardData.network) || defaultDashboard.network;
-  const ssid = net.ssid || "Home_WiFi";
+  const isConn = net.connected !== false && net.state !== "disconnected" && net.name !== "No Wi-Fi Connected";
+  const ssid = net.ssid || net.name || (isConn ? "Home_WiFi" : "No_WiFi");
   const pwd = net.password || "";
-  const auth = net.encryption || "WPA";
+  const auth = net.encryption || "WPA2";
 
   setText("#qr-net-name", ssid);
-  setText("#qr-net-type", pwd ? "Password Configured" : "Open Network");
+  setText("#qr-net-type", !isConn ? "Disconnected" : (pwd ? `Protected (${auth})` : "Open Network (No Password)"));
 
-  // Wi-Fi QR standard format: WIFI:T:WPA;S:MySSID;P:MyPassword;;
-  const qrString = `WIFI:T:${auth.includes("WPA") ? "WPA" : "nopass"};S:${ssid};P:${pwd};;`;
+  const qrString = qrLib.wifiString ? qrLib.wifiString(ssid, pwd, auth) : `WIFI:T:${auth.includes("WPA") ? "WPA" : "nopass"};S:${ssid};P:${pwd};;`;
   try {
-    QRCode.render(canvas, qrString, {
-      margin: 1,
-      scale: 4,
-      color: { dark: "#06152c", light: "#ffffff" }
+    qrLib.render(canvas, qrString, {
+      size: 160,
+      margin: 2,
+      dark: "#06152c",
+      light: "#ffffff"
     });
   } catch (e) {
-    // Handled
+    console.warn("QR Code render error:", e);
   }
 }
 
@@ -1415,10 +1579,31 @@ function closePdfReportModal() {
 }
 
 // -------------------------------------------------------------
-// NAVIGATION & SCREEN SWITCHING
+// NAVIGATION, SCREEN SWITCHING & MOBILE DRAWER
 // -------------------------------------------------------------
+const mobileMenuBtn = document.querySelector("#mobile-menu-btn");
+const mobileDrawerBackdrop = document.querySelector("#mobile-drawer-backdrop");
+const sidebarEl = document.querySelector(".sidebar");
+
+function toggleMobileDrawer(open) {
+  if (!sidebarEl) return;
+  const shouldOpen = open !== undefined ? open : !sidebarEl.classList.contains("mobile-open");
+  sidebarEl.classList.toggle("mobile-open", shouldOpen);
+  if (mobileDrawerBackdrop) mobileDrawerBackdrop.classList.toggle("active", shouldOpen);
+  if (mobileMenuBtn) mobileMenuBtn.classList.toggle("active", shouldOpen);
+  document.body.classList.toggle("drawer-open", shouldOpen);
+}
+
+if (mobileMenuBtn) {
+  mobileMenuBtn.addEventListener("click", () => toggleMobileDrawer());
+}
+if (mobileDrawerBackdrop) {
+  mobileDrawerBackdrop.addEventListener("click", () => toggleMobileDrawer(false));
+}
+
 function showScreen(name) {
   if (!titles[name]) return;
+  toggleMobileDrawer(false);
   screens.forEach((screen) => screen.classList.toggle("active-screen", screen.id === `${name}-screen`));
   document.querySelectorAll(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.screen === name));
   document.querySelectorAll(".reference-bottom-nav button").forEach((item) => item.classList.toggle("active", item.dataset.screen === name));
@@ -1448,9 +1633,14 @@ function showScreen(name) {
   } else if (name === "ai-chat") {
     const net = (dashboardData && dashboardData.network) || defaultDashboard.network;
     setText("#ai-chat-context-sub", `Active Context: ${net.ssid || "Connected Wi-Fi"} (${net.encryption || "WPA2"})`);
+    setTimeout(() => {
+      const input = document.querySelector("#ai-chat-input");
+      if (input) input.focus();
+    }, 120);
   } else if (name === "knowledge") {
     loadChecklist();
     loadKnowledge();
+    generateWifiQrCode();
   }
 }
 
@@ -1617,7 +1807,7 @@ if (btnRefreshMl) {
   });
 }
 
-// 4. AI Chat Assistant Form & Quick Pills
+// 4. AI Chat Assistant Form, Quick Pills & Clear
 const aiChatForm = document.querySelector("#ai-chat-form");
 if (aiChatForm) {
   aiChatForm.addEventListener("submit", (e) => {
@@ -1629,10 +1819,63 @@ if (aiChatForm) {
   });
 }
 
-document.querySelectorAll(".ai-pill-btn").forEach((pill) => {
-  pill.addEventListener("click", () => {
+const clearAiChatBtn = document.querySelector("#btn-clear-ai-chat");
+if (clearAiChatBtn) {
+  clearAiChatBtn.addEventListener("click", clearAiChat);
+}
+
+// Delegated click handler for all AI question pills (both suggested header pills and inline answer pills)
+document.addEventListener("click", (e) => {
+  const pill = e.target.closest(".ai-pill-btn");
+  if (pill) {
+    e.preventDefault();
     showScreen("ai-chat");
     sendAiChatMessage(pill.textContent.trim());
+  }
+});
+
+// QR Code Buttons & Quick Connect Action
+const saveQrBtn = document.querySelector("#btn-save-qr");
+if (saveQrBtn) {
+  saveQrBtn.addEventListener("click", () => {
+    const canvas = document.querySelector("#qr-code-canvas");
+    const net = (dashboardData && dashboardData.network) || defaultDashboard.network;
+    const ssid = (net.ssid || net.name || "wifi").replace(/[^a-zA-Z0-9_-]/g, "_");
+    if (typeof QRCode !== "undefined" && QRCode.download) {
+      QRCode.download(canvas, `${ssid}_wifi_qr.png`);
+      showMessage("Wi-Fi QR Code downloaded!", false);
+    } else if (canvas) {
+      const link = document.createElement("a");
+      link.download = `${ssid}_wifi_qr.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showMessage("Wi-Fi QR Code downloaded!", false);
+    }
+  });
+}
+
+const refreshQrBtn = document.querySelector("#btn-refresh-qr");
+if (refreshQrBtn) {
+  refreshQrBtn.addEventListener("click", () => {
+    generateWifiQrCode();
+    showMessage("Wi-Fi QR Code refreshed.", false);
+  });
+}
+
+// Quick QR buttons on Home cards (Desktop & Mobile)
+document.querySelectorAll("#btn-quick-qr-desktop, #btn-quick-qr-mobile").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    showScreen("knowledge");
+    generateWifiQrCode();
+    setTimeout(() => {
+      const panel = document.querySelector("#qr-panel-card");
+      if (panel) {
+        panel.scrollIntoView({ behavior: "smooth", block: "center" });
+        panel.style.boxShadow = "0 0 20px var(--cyan)";
+        setTimeout(() => { panel.style.boxShadow = ""; }, 2200);
+      }
+    }, 150);
   });
 });
 

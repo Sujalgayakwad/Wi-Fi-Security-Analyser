@@ -26,5 +26,6 @@ $RECYCLE.BIN/
 .idea/
 .vscode/
 
-# Logs
+# Logs & Temp
 *.log
+scratch/

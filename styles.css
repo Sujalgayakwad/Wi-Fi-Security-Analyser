@@ -1959,3 +1959,646 @@ body.light .settings-network-info h2 {
     gap: 6px;
   }
 }
+
+/* ============================================================
+   PROFESSIONAL DEVICE MANAGEMENT PANEL — NetGuard
+   ============================================================ */
+
+/* Device cards grid */
+.device-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+/* Individual device pro card */
+.device-pro-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: linear-gradient(145deg, #0d2341, #0a1b34);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px #02081733;
+  transition: box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+}
+.device-pro-card:hover {
+  box-shadow: 0 8px 32px #258cff22;
+  border-color: #2a5490;
+}
+
+/* Left status stripe */
+.device-status-stripe {
+  width: 4px;
+  flex-shrink: 0;
+  border-radius: 14px 0 0 14px;
+}
+.stripe-online {
+  background: linear-gradient(to bottom, var(--green), #1aad7f);
+}
+.stripe-offline {
+  background: linear-gradient(to bottom, #3a3a5c, #252545);
+}
+
+/* Device icon block */
+.device-icon-block {
+  width: 72px;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  margin: 14px 0 14px 14px;
+  position: relative;
+  gap: 6px;
+}
+.device-icon-emoji {
+  font-size: 28px;
+  line-height: 1;
+}
+.device-host-badge {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--cyan);
+  background: #0a3050;
+  border: 1px solid var(--cyan);
+  border-radius: 4px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
+/* Info block (main content) */
+.device-info-block {
+  flex: 1;
+  min-width: 0;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Name row */
+.device-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.device-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #e8f1ff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+.device-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+.pill-online {
+  background: #083c26;
+  color: var(--green);
+  border: 1px solid #1a7050;
+}
+.pill-offline {
+  background: #2a1e35;
+  color: #9c8aad;
+  border: 1px solid #42345a;
+}
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.pill-online .pill-dot {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+.pill-offline .pill-dot {
+  background: #9c8aad;
+}
+.device-trusted-badge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--cyan);
+  background: #083040;
+  border: 1px solid #196480;
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* Subtitle */
+.device-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Meta grid — 2x2 */
+.device-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 14px;
+  margin-top: 4px;
+}
+.device-meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.meta-label {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  color: #5a7aa0;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.meta-value {
+  font-size: 11px;
+  color: #c8daef;
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Action column */
+.device-action-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px 14px 8px;
+  min-width: 110px;
+}
+.device-trust-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #2a4a70;
+  background: #0e2440;
+  color: #7ba8da;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.device-trust-btn:hover {
+  background: #163860;
+  border-color: #3a6494;
+  color: #fff;
+}
+.device-trust-btn.trusted {
+  background: #083a26;
+  border-color: #1a7050;
+  color: var(--green);
+}
+.device-trust-btn.trusted:hover {
+  background: #0c4a30;
+}
+.device-action-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid #1e3d60;
+  background: #0a1f3a;
+  color: #7a9ec8;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.device-action-pill:hover {
+  background: #142f52;
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+.device-action-pill:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* Empty state */
+.device-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 56px 20px;
+  color: var(--muted);
+}
+.device-empty-state .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+.device-empty-state h3 {
+  font-size: 16px;
+  color: #8aa6c8;
+  margin: 0 0 10px;
+}
+.device-empty-state p {
+  font-size: 12px;
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+/* Scan save notification bar */
+.scan-saved-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #052418;
+  border: 1px solid #1a6040;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-size: 12px;
+  color: var(--green);
+  margin-top: 12px;
+  animation: fadeInBar 0.4s ease;
+}
+@keyframes fadeInBar {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive device cards */
+@media (max-width: 1050px) {
+  .device-cards {
+    grid-template-columns: 1fr;
+  }
+  .device-meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 720px) {
+  .device-cards {
+    grid-template-columns: 1fr;
+  }
+  .device-pro-card {
+    flex-direction: column;
+  }
+  .device-icon-block {
+    flex-direction: row;
+    width: auto;
+    min-width: auto;
+    margin: 14px 14px 0;
+    padding: 10px 14px;
+    justify-content: flex-start;
+  }
+  .device-action-col {
+    flex-direction: row;
+    padding: 10px 14px 14px;
+    min-width: auto;
+    justify-content: flex-start;
+  }
+  .device-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   UNIVERSAL RESPONSIVE SYSTEM — MOBILE, TABLET, LAPTOP, DESKTOP
+   ============================================================ */
+
+/* 1. Mobile Menu Button */
+.mobile-menu-btn {
+  display: none;
+  background: #0b2242;
+  border: 1px solid #1f4577;
+  border-radius: 9px;
+  padding: 8px;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.mobile-menu-btn:hover {
+  background: #143560;
+  border-color: var(--cyan);
+}
+.mobile-menu-btn .bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: all 0.25s ease;
+}
+.mobile-menu-btn.active .bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.mobile-menu-btn.active .bar:nth-child(2) {
+  opacity: 0;
+}
+.mobile-menu-btn.active .bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* 2. Mobile Drawer Backdrop */
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 8, 23, 0.75);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.mobile-drawer-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+body.drawer-open {
+  overflow: hidden !important;
+}
+
+/* 3. Fluid Typography & Elements */
+.welcome-row h1, .page-heading h1 {
+  font-size: clamp(20px, 3.2vw, 28px);
+  word-break: break-word;
+}
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* 4. Touch Targets & Ergonomics */
+@media (pointer: coarse) {
+  button, .nav-item, .shortcut, .pass-toggle-btn, .pass-copy-btn {
+    min-height: 40px;
+  }
+  .reference-bottom-nav button {
+    min-height: 48px;
+  }
+}
+
+/* 5. Screens >= 769px: Tablets, Laptops & Desktops */
+@media (min-width: 769px) {
+  .app-shell {
+    display: flex;
+  }
+  .sidebar {
+    display: flex !important;
+    position: static !important;
+    left: 0 !important;
+    width: clamp(210px, 18vw, 260px) !important;
+    flex-shrink: 0 !important;
+  }
+  .main-content {
+    flex: 1;
+    min-width: 0;
+    padding: 0 clamp(20px, 3vw, 48px) 50px;
+  }
+  .mobile-menu-btn {
+    display: none !important;
+  }
+  .mobile-drawer-backdrop {
+    display: none !important;
+  }
+  .reference-bottom-nav {
+    display: none !important;
+  }
+  #home-screen {
+    max-width: none !important;
+    padding: 16px 0 40px !important;
+  }
+  #home-screen .reference-header,
+  #home-screen .reference-network,
+  #home-screen .reference-score,
+  #home-screen .shortcut-grid,
+  #home-screen .reference-section-title,
+  #home-screen .reference-activity {
+    display: none !important;
+  }
+  #home-screen .legacy-dashboard {
+    display: block !important;
+  }
+}
+
+/* 6. Screens between 769px and 1100px: Mid Tablets & Small Laptops */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .kpi-ribbon {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  .content-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .traffic-speed-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .threat-overview-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .device-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 7. Screens <= 768px: Mobile Phones & Foldables */
+@media (max-width: 768px) {
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: -300px !important;
+    bottom: 0 !important;
+    width: 275px !important;
+    z-index: 1000 !important;
+    background: #07162cf8 !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-right: 1px solid #1e3e68 !important;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 12px 0 45px rgba(0, 0, 0, 0.75) !important;
+    display: flex !important;
+    overflow-y: auto !important;
+    padding: 24px 16px !important;
+  }
+  .sidebar.mobile-open {
+    left: 0 !important;
+  }
+  .main-content {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  .topbar {
+    height: 64px !important;
+    padding: 0 4px !important;
+  }
+  .breadcrumbs {
+    display: none !important;
+  }
+  .topbar-network-pill {
+    display: none !important;
+  }
+  .last-scan {
+    display: none !important;
+  }
+
+  /* Full Screen Responsiveness on Mobile */
+  .stats-grid,
+  .content-grid,
+  .scan-layout,
+  .threat-overview-grid,
+  .traffic-speed-grid,
+  .knowledge-articles-grid,
+  .device-cards {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .kpi-ribbon {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .kpi-card {
+    padding: 12px 14px !important;
+  }
+  .kpi-card strong {
+    font-size: 15px !important;
+  }
+  .kpi-card small {
+    font-size: 8.5px !important;
+  }
+
+  /* Table horizontal scroll wrappers */
+  .wifi-table-wrapper,
+  .table-card,
+  .comparison-table-card {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+  }
+  .advanced-wifi-table {
+    min-width: 680px !important;
+  }
+  .table-head, .table-row {
+    min-width: 580px !important;
+  }
+
+  /* AI Chat height on mobile */
+  .ai-chat-layout {
+    height: clamp(420px, 68vh, 580px) !important;
+  }
+  .ai-msg {
+    max-width: 90% !important;
+  }
+
+  /* Pass badge layout on mobile */
+  .wifi-password-badge.desktop-pass-badge {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .pass-btn-group {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .pass-btn-group button {
+    flex: 1 !important;
+  }
+
+  /* Modals on mobile */
+  .pdf-modal-card {
+    width: 95vw !important;
+    max-height: 88vh !important;
+    padding: 20px 16px !important;
+    margin: 16px auto !important;
+  }
+
+  /* Reference bottom navigation */
+  .reference-bottom-nav {
+    display: grid !important;
+    position: fixed !important;
+    z-index: 990 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    transform: none !important;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom)) !important;
+    background: #07172cf2 !important;
+    border-top: 1px solid #1a3962 !important;
+    backdrop-filter: blur(14px) !important;
+    -webkit-backdrop-filter: blur(14px) !important;
+  }
+}
+
+/* 8. Small Smart-Phones <= 420px (iPhone SE, Galaxy Mini) */
+@media (max-width: 420px) {
+  .kpi-ribbon {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+  .shortcut-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+  }
+  .shortcut {
+    min-height: 74px !important;
+    padding: 6px 4px !important;
+  }
+  .shortcut strong {
+    font-size: 8px !important;
+  }
+  .shortcut span {
+    font-size: 18px !important;
+  }
+  .welcome-actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .welcome-actions button {
+    width: 100% !important;
+  }
+  .ai-suggested-pills {
+    padding: 10px 12px !important;
+    gap: 6px !important;
+  }
+  .ai-pill-btn {
+    font-size: 9px !important;
+    padding: 5px 10px !important;
+  }
+}
