@@ -5,7 +5,7 @@ import time
 import socket
 import datetime
 import subprocess
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 
 # Regex patterns for parsing netsh and netstat output
 SSID_LINE = re.compile(r"^SSID\s+\d+\s*:\s*(.*)$", re.IGNORECASE)

@@ -1,42 +1,19 @@
-# Maven Build Output
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
 
-# Compiled Java Classes
-*.class
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
 
-# Package Files (except Maven Wrapper)
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# SQLite Database (seeded automatically at startup)
+# SQLite Database (generated and seeded automatically at startup)
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
-
-# IDE & Editor Files
-.idea/
-*.iml
-.vscode/
-.project
-.classpath
-.settings/
-bin/
-nbproject/
-*.sublime-project
-*.sublime-workspace
 
 # OS Generated Files
 Thumbs.db
@@ -44,15 +21,10 @@ ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
-New Text Document.txt
+
+# IDEs & Editor Files
+.idea/
+.vscode/
 
 # Logs
 *.log
-
-# Legacy Artifacts
-__pycache__/
-*.pyc
-.env
-venv/
-.venv/
-wifi_report.json

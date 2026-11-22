@@ -5,7 +5,7 @@ import json
 import sqlite3
 import datetime
 from typing import Dict, Any, List, Optional
-from flask import Flask, request, jsonify, send_from_directory, Response, make_response
+from flask import Flask, request, jsonify, send_from_directory, make_response
 
 import scanner
 
