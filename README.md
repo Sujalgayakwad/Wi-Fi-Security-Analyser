@@ -1,12 +1,12 @@
 # 🛡️ NetGuard — Wi-Fi Cybersecurity Platform & Spectrum Auditor
 
-[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5.6-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0%2B-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-3.49-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://www.microsoft.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)](LICENSE)
 
-An enterprise-grade, high-performance **Wi-Fi Security Analysis, Spectrum Auditor, and Threat Assessment Platform** built with **Java Spring Boot** and a responsive modern web dashboard.
+An enterprise-grade, high-performance **Wi-Fi Security Analysis, Spectrum Auditor, and Threat Assessment Platform** built with **Python (Flask)** and a responsive modern web dashboard.
 
 NetGuard audits wireless access points, evaluates encryption protocols against modern cybersecurity standards (NIST, CIS, Wi-Fi Alliance), detects potential Evil-Twin and Rogue AP attacks, discovers connected devices with an authorized allowlist, measures ICMP latency and jitter, provides an AI security assistant, and generates downloadable audit reports.
 
@@ -67,24 +67,17 @@ NetGuard audits wireless access points, evaluates encryption protocols against m
 
 ```
 Wi-Fi-Security-Analyser/
-├── src/
-│   └── main/
-│       ├── java/com/netguard/
-│       │   ├── NetGuardApplication.java   # Spring Boot REST API & SQLite Controller
-│       │   └── WifiNetworkScanner.java    # Native Windows Wi-Fi, Ping, & ML Engine
-│       └── resources/
-│           └── application.properties     # Server configuration (Port 5001)
-├── screenshots/
-│   ├── dashboard.png.jpeg                 # Dashboard UI preview
-│   └── networks.png.jpeg                  # Network analysis preview
-├── .mvn/                                  # Maven Wrapper files
+├── app.py                                 # Flask REST API, SQLite Controller & Static Server
+├── scanner.py                             # Native Windows Wi-Fi, Ping, Throughput & ML Engine
+├── requirements.txt                       # Lightweight Python dependencies (Flask)
+├── run.bat                                # 1-Click Windows launcher script
 ├── app.js                                 # Frontend state, charts, and API bindings
 ├── index.html                             # Responsive cybersecurity single-page application
 ├── styles.css                             # Dark/light theme styles & print formatting
 ├── qrcode.js                              # Offline QR code generator library
-├── pom.xml                                # Maven project definition & dependencies
-├── run.bat                                # 1-Click Windows launcher script
-├── mvnw / mvnw.cmd                        # Maven wrapper executable
+├── screenshots/
+│   ├── dashboard.png.jpeg                 # Dashboard UI preview
+│   └── networks.png.jpeg                  # Network analysis preview
 └── README.md                              # Documentation
 ```
 
@@ -94,7 +87,7 @@ Wi-Fi-Security-Analyser/
 
 ### Prerequisites
 - **Operating System**: Windows 10 or 11
-- **Java**: JDK 17 or higher (tested with OpenJDK 17 and 21)
+- **Python**: Python 3.8 or higher (Python 3.10–3.13 tested)
 - **Wi-Fi Interface**: Enabled wireless adapter
 
 ### Installation & Launch
@@ -105,19 +98,13 @@ Double-click `run.bat` in File Explorer or run:
 .\run.bat
 ```
 
-#### Option B: Maven Wrapper (Command Line)
+#### Option B: Standard Python (Command Line)
 ```powershell
-# Run using the embedded Maven wrapper
-.\mvnw.cmd spring-boot:run
-```
+# 1. Install dependencies
+pip install -r requirements.txt
 
-#### Option C: Executable JAR
-```powershell
-# Build the production JAR
-.\mvnw.cmd package -DskipTests
-
-# Run the packaged application
-java -jar target/netguard-1.0.0.jar
+# 2. Run the platform
+python app.py
 ```
 
 Once running, navigate to:
