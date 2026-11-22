@@ -29,3 +29,9 @@ $RECYCLE.BIN/
 # Logs & Temp
 *.log
 scratch/
+
+# Local Project Reports & Presentations
+miniproject.docx
+miniproject.pptx
+*.docx
+*.pptx
