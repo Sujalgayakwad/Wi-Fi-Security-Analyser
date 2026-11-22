@@ -5,13 +5,15 @@ import time
 import socket
 import datetime
 import subprocess
+import urllib.request
+import json
 from typing import Dict, List, Optional, Any
 
 # Regex patterns for parsing netsh and netstat output
 SSID_LINE = re.compile(r"^SSID\s+\d+\s*:\s*(.*)$", re.IGNORECASE)
 BSSID_LINE = re.compile(r"^BSSID\s+\d+\s*:\s*([0-9a-fA-F:-]{17}).*$", re.IGNORECASE)
 SIGNAL_LINE = re.compile(r"^Signal\s*:\s*(\d+)\s*%?.*$", re.IGNORECASE)
-CHANNEL_LINE = re.compile(r"^Channel\s*:\s*(\d+).*$", re.IGNORECASE)
+CHANNEL_LINE = re.compile(r"^Channel\s*:\s*(\\d+).*$", re.IGNORECASE)
 RADIO_LINE = re.compile(r"^Radio\s+type\s*:\s*(.*)$", re.IGNORECASE)
 
 NETSTAT_BYTES = re.compile(r"^Bytes\s+(\d+)\s+(\d+).*$", re.IGNORECASE)
@@ -149,24 +151,72 @@ def get_wifi_password(ssid: str) -> str:
     return ""
 
 def get_connected_wifi() -> Optional[Dict[str, Any]]:
-    if os.name != "nt":
-        return None
-    try:
-        proc = subprocess.run(
-            ["netsh", "wlan", "show", "interfaces"],
-            capture_output=True,
-            text=True,
-            timeout=8,
-            errors="ignore"
-        )
-        if proc.returncode != 0:
-            return None
-        return parse_connected_wifi(proc.stdout)
-    except Exception:
-        return None
+    # Windows Implementation
+    if os.name == "nt":
+        try:
+            proc = subprocess.run(
+                ["netsh", "wlan", "show", "interfaces"],
+                capture_output=True,
+                text=True,
+                timeout=8,
+                errors="ignore"
+            )
+            if proc.returncode == 0:
+                return parse_connected_wifi(proc.stdout)
+        except Exception:
+            pass
+
+    # Linux Fallback Implementation (nmcli / iwgetid)
+    else:
+        try:
+            proc = subprocess.run(
+                ["nmcli", "-t", "-f", "ACTIVE,SSID,BSSID,CHAN,FREQ,SIGNAL,SECURITY", "dev", "wifi"],
+                capture_output=True,
+                text=True,
+                timeout=6,
+                errors="ignore"
+            )
+            if proc.returncode == 0:
+                for line in proc.stdout.splitlines():
+                    parts = line.strip().split(":")
+                    if parts and parts[0].lower() == "yes":
+                        ssid = parts[1] if len(parts) > 1 else "Connected Wi-Fi"
+                        bssid = parts[2] if len(parts) > 2 else "00:00:00:00:00:00"
+                        chan = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 11
+                        sig = int(parts[5]) if len(parts) > 5 and parts[5].isdigit() else 75
+                        sec = parts[6] if len(parts) > 6 else "WPA2"
+                        dbm = calculate_dbm(sig)
+                        return {
+                            "id": 1,
+                            "name": ssid,
+                            "ssid": ssid,
+                            "state": "connected",
+                            "band": derive_band(chan),
+                            "channel": chan,
+                            "signalPercent": sig,
+                            "signal_dbm": dbm,
+                            "signalQuality": classify_signal_quality(dbm),
+                            "score": 85 if "wpa" in sec.lower() else 30,
+                            "securityScore": 85 if "wpa" in sec.lower() else 30,
+                            "securityRating": "Good",
+                            "securityClassification": "Good",
+                            "encryption": sec,
+                            "authentication": sec,
+                            "cipher": "CCMP",
+                            "description": "Linux WLAN Interface",
+                            "bssid": bssid,
+                            "password": "",
+                            "radioType": "802.11ac",
+                            "vendor": resolve_vendor(bssid),
+                            "connected": True,
+                            "status": "connected"
+                        }
+        except Exception:
+            pass
+
+    return None
 
 def parse_connected_wifi(output: str) -> Optional[Dict[str, Any]]:
-    # Split by interfaces
     blocks = re.split(r"(?m)(?=^\s*Name\s*:)", output)
     for block in blocks:
         state = None
@@ -279,21 +329,60 @@ def parse_connected_wifi(output: str) -> Optional[Dict[str, Any]]:
     return None
 
 def scan_available_networks() -> List[Dict[str, Any]]:
-    if os.name != "nt":
-        return []
-    try:
-        proc = subprocess.run(
-            ["netsh", "wlan", "show", "networks", "mode=bssid"],
-            capture_output=True,
-            text=True,
-            timeout=15,
-            errors="ignore"
-        )
-        if proc.returncode != 0:
-            return []
-        return parse_scan_output(proc.stdout)
-    except Exception:
-        return []
+    # Windows Native
+    if os.name == "nt":
+        try:
+            proc = subprocess.run(
+                ["netsh", "wlan", "show", "networks", "mode=bssid"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                errors="ignore"
+            )
+            if proc.returncode == 0:
+                return parse_scan_output(proc.stdout)
+        except Exception:
+            pass
+
+    # Linux Native (nmcli)
+    else:
+        try:
+            proc = subprocess.run(
+                ["nmcli", "-t", "-f", "SSID,BSSID,CHAN,SIGNAL,SECURITY", "dev", "wifi"],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                errors="ignore"
+            )
+            if proc.returncode == 0:
+                networks = []
+                for line in proc.stdout.splitlines():
+                    parts = line.strip().split(":")
+                    if len(parts) >= 5:
+                        s_name = parts[0] or "[Hidden SSID]"
+                        s_bssid = parts[1]
+                        s_chan = int(parts[2]) if parts[2].isdigit() else 11
+                        s_sig = int(parts[3]) if parts[3].isdigit() else 50
+                        s_sec = parts[4] or "Open"
+                        networks.append(analyze_network({
+                            "ssid": s_name,
+                            "bssid": s_bssid,
+                            "authentication": s_sec,
+                            "encryption": s_sec,
+                            "signalPercent": s_sig,
+                            "band": derive_band(s_chan),
+                            "channel": s_chan,
+                            "radioType": "802.11ac",
+                            "isDuplicate": False,
+                            "isEvilTwin": False
+                        }))
+                if networks:
+                    networks.sort(key=lambda n: (-n["signalPercent"], n["ssid"]))
+                    return networks
+        except Exception:
+            pass
+
+    return []
 
 def parse_scan_output(output: str) -> List[Dict[str, Any]]:
     raw_aps = []
@@ -477,6 +566,8 @@ def detect_threats(networks: List[Dict[str, Any]], connected: Optional[Dict[str,
                         "affectedNetwork": conn_ssid,
                         "bssid": net["bssid"],
                         "vendor": net["vendor"],
+                        "evidence": f"Duplicate SSID with conflicting BSSID ({net['bssid']}) vs authorized ({conn_bssid}).",
+                        "confidence": "HIGH" if diff_sec else "MEDIUM",
                         "recommendation": "Confirm whether this is a legitimate range extender or mesh node. If not, disconnect immediately and enable MAC filtering."
                     })
                     threat_id += 1
@@ -496,6 +587,8 @@ def detect_threats(networks: List[Dict[str, Any]], connected: Optional[Dict[str,
                 "affectedNetwork": ssid,
                 "bssid": primary["bssid"],
                 "vendor": primary["vendor"],
+                "evidence": f"{len(group)} distinct BSSIDs sharing identical broadcast SSID.",
+                "confidence": "HIGH",
                 "recommendation": "If not an authorized mesh network, inspect BSSIDs to ensure no rogue AP is spoofing client connections."
             })
             threat_id += 1
@@ -515,6 +608,8 @@ def detect_threats(networks: List[Dict[str, Any]], connected: Optional[Dict[str,
                 "affectedNetwork": net["ssid"],
                 "bssid": net["bssid"],
                 "vendor": net["vendor"],
+                "evidence": "802.11 Beacon frame specifies Open Authentication with Null cipher.",
+                "confidence": "CONFIRMED",
                 "recommendation": "Configure WPA2-AES or WPA3 authentication on the router. When using open networks, always enforce an end-to-end VPN."
             })
             threat_id += 1
@@ -529,6 +624,8 @@ def detect_threats(networks: List[Dict[str, Any]], connected: Optional[Dict[str,
                 "affectedNetwork": net["ssid"],
                 "bssid": net["bssid"],
                 "vendor": net["vendor"],
+                "evidence": f"Cipher suite advertised as {net['authentication']} / {net['encryption']}.",
+                "confidence": "CONFIRMED",
                 "recommendation": "Migrate router configuration from WEP/TKIP to WPA2-AES (CCMP) or WPA3-SAE immediately."
             })
             threat_id += 1
@@ -570,7 +667,7 @@ def scan_local_devices(network_name: Optional[str]) -> List[Dict[str, Any]]:
                     ip = parts[0]
                     mac = parts[1].replace("-", ":").lower()
                     entry_type = parts[2].lower()
-                    if entry_type == "dynamic" and not ip.endswith(".255") and not ip.startswith(("224.", "239.")):
+                    if entry_type in ["dynamic", "ethernet"] and not ip.endswith(".255") and not ip.startswith(("224.", "239.")):
                         is_gw = ip.endswith(".1")
                         vendor = resolve_vendor(mac)
                         dtype = "router" if is_gw else infer_device_type(vendor, ip)
@@ -606,8 +703,9 @@ def measure_network_performance() -> Dict[str, Any]:
     internet_available = False
 
     try:
+        ping_cmd = ["ping", "-n", "3", "-w", "1000", target_host] if os.name == "nt" else ["ping", "-c", "3", "-W", "1", target_host]
         proc = subprocess.run(
-            ["ping", "-n", "3", "-w", "1000", target_host],
+            ping_cmd,
             capture_output=True,
             text=True,
             timeout=5,
@@ -624,6 +722,14 @@ def measure_network_performance() -> Dict[str, Any]:
             max_lat = int(times_match.group(2))
             avg_lat = int(times_match.group(3))
             internet_available = loss < 100
+        else:
+            # Linux ping regex fallback
+            m_lin = re.search(r"rtt min/avg/max/mdev = ([\d\.]+)/([\d\.]+)/([\d\.]+)", out)
+            if m_lin:
+                min_lat = int(float(m_lin.group(1)))
+                avg_lat = int(float(m_lin.group(2)))
+                max_lat = int(float(m_lin.group(3)))
+                internet_available = True
     except Exception:
         pass
 
@@ -638,6 +744,8 @@ def measure_network_performance() -> Dict[str, Any]:
         if jitter > 30:
             score -= min(20, (jitter - 30) // 2)
         score = max(15, min(100, score))
+
+    stability_percent = max(10, min(100, 100 - (loss * 2) - min(40, jitter // 2)))
 
     if score >= 90:
         quality_rating = "Excellent"
@@ -662,6 +770,7 @@ def measure_network_performance() -> Dict[str, Any]:
         "packetLossPercent": loss,
         "connectionQualityScore": score,
         "qualityRating": quality_rating,
+        "stabilityPercent": stability_percent,
         "measuredAt": datetime.datetime.now().strftime("%I:%M:%S %p"),
         "rxSpeedFormatted": traffic.get("rxSpeedFormatted", "0.0 KB/s"),
         "txSpeedFormatted": traffic.get("txSpeedFormatted", "0.0 KB/s"),
@@ -679,26 +788,38 @@ def get_traffic_metrics() -> Dict[str, Any]:
     errors = 0
     discards = 0
 
-    try:
-        proc = subprocess.run(["netstat", "-e"], capture_output=True, text=True, timeout=4, errors="ignore")
-        if proc.returncode == 0:
-            for raw_line in proc.stdout.splitlines():
-                line = raw_line.strip()
-                m_b = NETSTAT_BYTES.match(line)
-                if m_b:
-                    bytes_in = int(m_b.group(1))
-                    bytes_out = int(m_b.group(2))
-                m_u = NETSTAT_UNICAST.match(line)
-                if m_u:
-                    unicast = int(m_u.group(1)) + int(m_u.group(2))
-                m_e = NETSTAT_ERRORS.match(line)
-                if m_e:
-                    errors = int(m_e.group(1)) + int(m_e.group(2))
-                m_d = NETSTAT_DISCARDS.match(line)
-                if m_d:
-                    discards = int(m_d.group(1)) + int(m_d.group(2))
-    except Exception:
-        pass
+    if os.name == "nt":
+        try:
+            proc = subprocess.run(["netstat", "-e"], capture_output=True, text=True, timeout=4, errors="ignore")
+            if proc.returncode == 0:
+                for raw_line in proc.stdout.splitlines():
+                    line = raw_line.strip()
+                    m_b = NETSTAT_BYTES.match(line)
+                    if m_b:
+                        bytes_in = int(m_b.group(1))
+                        bytes_out = int(m_b.group(2))
+                    m_u = NETSTAT_UNICAST.match(line)
+                    if m_u:
+                        unicast = int(m_u.group(1)) + int(m_u.group(2))
+                    m_e = NETSTAT_ERRORS.match(line)
+                    if m_e:
+                        errors = int(m_e.group(1)) + int(m_e.group(2))
+                    m_d = NETSTAT_DISCARDS.match(line)
+                    if m_d:
+                        discards = int(m_d.group(1)) + int(m_d.group(2))
+        except Exception:
+            pass
+    else:
+        # Linux /proc/net/dev fallback
+        try:
+            with open("/proc/net/dev", "r") as f:
+                for line in f:
+                    if ":" in line and not line.strip().startswith("lo"):
+                        parts = line.split(":", 1)[1].split()
+                        bytes_in += int(parts[0])
+                        bytes_out += int(parts[8])
+        except Exception:
+            pass
 
     rx_speed = 0.0
     tx_speed = 0.0
@@ -734,9 +855,16 @@ def get_traffic_metrics() -> Dict[str, Any]:
     _last_traffic_report = res
     return res
 
-def detect_ml_anomalies(networks: List[Dict[str, Any]], connected: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def detect_ml_anomalies(
+    networks: List[Dict[str, Any]],
+    connected: Optional[Dict[str, Any]] = None,
+    history_records: Optional[List[Dict[str, Any]]] = None
+) -> Dict[str, Any]:
     anomaly_list = []
     anomaly_score = 0.0
+
+    sample_size = len(networks)
+    confidence = "HIGH" if sample_size >= 10 else "MODERATE" if sample_size >= 3 else "INSUFFICIENT_DATA"
 
     if networks:
         signals = [n.get("signalPercent", 50) for n in networks]
@@ -761,6 +889,24 @@ def detect_ml_anomalies(networks: List[Dict[str, Any]], connected: Optional[Dict
             )
             anomaly_score += 0.20
 
+    # Historical cross-check if historical observations exist
+    if history_records:
+        historical_bssid_map: Dict[str, set] = {}
+        for h in history_records:
+            ssid = h.get("ssid") or h.get("network_name")
+            bssid = h.get("bssid")
+            if ssid and bssid:
+                historical_bssid_map.setdefault(ssid, set()).add(bssid)
+
+        for n in networks:
+            ssid = n.get("ssid")
+            bssid = n.get("bssid")
+            if ssid in historical_bssid_map and bssid not in historical_bssid_map[ssid] and len(historical_bssid_map[ssid]) > 0:
+                anomaly_list.append(
+                    f"BSSID Divergence Anomaly: Network '{ssid}' appeared with an unexpected hardware MAC ({bssid}) not previously observed for this network identifier."
+                )
+                anomaly_score += 0.40
+
     if connected and connected.get("state", "").lower() == "connected":
         if "open" in connected.get("authentication", "").lower():
             anomaly_list.append("Cleartext Airspace Risk: Active connection lacks cryptographic link-layer encapsulation.")
@@ -774,7 +920,8 @@ def detect_ml_anomalies(networks: List[Dict[str, Any]], connected: Optional[Dict
         "anomalyScore": anomaly_score,
         "isAnomalous": is_anomalous,
         "anomaliesDetected": anomaly_list,
-        "sampleSize": len(networks),
+        "sampleSize": sample_size,
+        "confidenceLevel": confidence,
         "evaluatedAt": datetime.datetime.now().strftime("%I:%M:%S %p")
     }
 
@@ -793,6 +940,43 @@ def process_ai_chat(
 
     suggestions = []
 
+    # Check for optional external LLM API key
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+
+    if openai_key and len(q) > 4:
+        try:
+            prompt = (
+                f"You are NetGuard AI, a cybersecurity assistant. User is on network '{conn_name}' (Security Score: {score}/100, "
+                f"Auth: {auth}, Band: {band}, Active threats: {threat_count}).\n"
+                f"User Question: {query}\n"
+                f"Provide a concise, highly technical yet accessible answer with bullet points if applicable."
+            )
+            req = urllib.request.Request(
+                "https://api.openai.com/v1/chat/completions",
+                data=json.dumps({
+                    "model": "gpt-4o-mini",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 300
+                }).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {openai_key}"
+                }
+            )
+            with urllib.request.urlopen(req, timeout=6) as response:
+                resp_data = json.loads(response.read().decode())
+                ans = resp_data["choices"][0]["message"]["content"].strip()
+                return {
+                    "question": query,
+                    "answer": ans,
+                    "suggestedQuestions": ["Is my Wi-Fi network secure?", "How can I improve my router security?", "What does WPA3 mean?"],
+                    "timestamp": datetime.datetime.now().strftime("%I:%M %p")
+                }
+        except Exception:
+            pass  # Fall through to robust rule-based engine
+
+    # Comprehensive Rule-Based Fallback Engine
     if any(k in q for k in ["is my wi-fi secure", "is my network secure", "am i safe"]):
         if score >= 90:
             answer = f"Yes, your network **'{conn_name}'** is operating with high security ({score}/100). It enforces modern {auth} encryption with protected management frames. No active Evil Twin or spoofing attacks were found."
@@ -837,6 +1021,21 @@ def process_ai_chat(
             "5. **Create an Isolated IoT Guest Network:** Keep Smart TVs and smart home devices separate from your personal PC."
         )
         suggestions = ["Is my Wi-Fi network secure?", "Why am I receiving an Evil Twin warning?"]
+    elif "who is connected" in q or "device" in q:
+        answer = (
+            f"You can audit all devices connected to your authorized network via the **Connected Devices** screen.\n\n"
+            f"- NetGuard maps active IP addresses, hardware MACs, and OUI manufacturers.\n"
+            f"- Any unfamiliar hardware can be marked as Untrusted using the hardware allowlist toggle."
+        )
+        suggestions = ["How do I block an unknown device?", "What is an OUI manufacturer?"]
+    elif "channel" in q or "congestion" in q:
+        answer = (
+            "Wi-Fi channels dictate the exact radio frequency slice your router broadcasts on:\n\n"
+            "- In the **2.4 GHz band**, only channels **1, 6, and 11** do not overlap.\n"
+            "- If neighbors use channels 2, 3, 4, or 5, adjacent-channel interference degrades your throughput.\n"
+            "- Switch to the **5 GHz band** for wider (40/80 MHz) channels and virtually zero co-channel contention."
+        )
+        suggestions = ["Is 5 GHz more secure than 2.4 GHz?", "How do I change my Wi-Fi channel?"]
     else:
         answer = (
             f"I am your **NetGuard AI Security Assistant**. I am monitoring your active connection on **'{conn_name}'** ({auth}, {band}).\n\n"

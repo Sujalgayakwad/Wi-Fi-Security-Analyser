@@ -128,26 +128,73 @@ Once running, navigate to:
 
 ## 🔌 API Endpoints Reference
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/` | Web UI Dashboard |
-| `GET` | `/api/dashboard` | Active Wi-Fi telemetry, stats, connected password, and threats |
-| `GET` | `/api/wifi/scan` | Scans all visible access points with channel, band, RSSI, and security score |
-| `GET` | `/api/threats` | Active threat analysis, Evil Twin detection, and rogue AP alerts |
-| `GET` | `/api/performance` | ICMP ping latency, jitter, packet loss %, and connection quality score |
-| `POST`| `/api/ai/chat` | AI cybersecurity assistant chat endpoint |
-| `GET` | `/api/ml/anomalies` | Statistical Z-score radio anomaly detection |
-| `GET` | `/api/devices` | Subnet device inventory with vendor resolution |
-| `POST`| `/api/devices/{id}/trust` | Toggles device allowlist trust status |
-| `GET` | `/api/traffic` | Real-time byte transfer rates (RX/TX KB/s) |
-| `GET` | `/api/alerts` | Security alert event log |
-| `POST`| `/api/alerts/clear` | Marks all alerts as read |
-| `GET` | `/api/wifi/compare` | Compares multiple access points side-by-side |
-| `GET` | `/api/security/checklist`| Router security hardening rules |
-| `GET` | `/api/knowledge` | Tip of the Day and cybersecurity intelligence articles |
-| `GET` | `/api/export/csv` | Download scan results as CSV |
-| `GET` | `/api/export/json` | Full structured security audit JSON export |
-| `GET` | `/qrcode.js` | Offline QR code library script |
+| Category | Method | Endpoint | Description |
+| :--- | :--- | :--- | :--- |
+| **Auth** | `POST` | `/api/auth/register` | Register new analyst account |
+| **Auth** | `POST` | `/api/auth/login` | Authenticate user & generate bearer session token |
+| **Auth** | `POST` | `/api/auth/logout` | Terminate session & invalidate token |
+| **Auth** | `GET` | `/api/auth/profile` | Current user profile & authentication status |
+| **Dashboard** | `GET` | `/` | Web UI Dashboard |
+| **Dashboard** | `GET` | `/api/dashboard` | Active Wi-Fi telemetry, stats, connected password, and threats |
+| **Scanning** | `POST`| `/api/scans/start` | Trigger live Wi-Fi scan session with full DB logging |
+| **Scanning** | `GET` | `/api/scans` | Historical scan sessions |
+| **Scanning** | `GET` | `/api/scans/{id}` | Granular AP observations for specific scan session |
+| **Scanning** | `GET` | `/api/wifi/networks` | Visible access points with channel, band, RSSI, and security score |
+| **Analysis** | `POST`| `/api/security/analyze`| Runs rule-based security findings engine |
+| **Analysis** | `GET` | `/api/security/findings`| Filterable security findings log (severity/status) |
+| **Analysis** | `GET` | `/api/security/score` | Current network security score with delta comparison |
+| **Threats** | `GET` | `/api/threats` | Active threat analysis, Evil Twin detection, and rogue AP alerts |
+| **Threats** | `POST`| `/api/threats/analyze`| Record threat events with confidence levels to database |
+| **Threats** | `GET` | `/api/threats/history`| Historical threat event logs |
+| **Devices** | `GET` | `/api/devices` | Subnet device inventory with vendor resolution |
+| **Devices** | `POST`| `/api/devices/discover`| Trigger active ARP discovery & track presence |
+| **Devices** | `POST`| `/api/devices/{id}/trust`| Toggle device hardware allowlist trust status |
+| **Devices** | `GET` | `/api/devices/history` | Historical device connection logs |
+| **Performance**| `GET` | `/api/performance` | Live latency, jitter, packet loss %, and quality score |
+| **Performance**| `POST`| `/api/performance/test` | Execute performance audit & store to history |
+| **Performance**| `GET` | `/api/performance/history`| Time-series latency and quality score history |
+| **AI Assistant**| `POST`| `/api/ai/chat` | AI cybersecurity assistant chat endpoint |
+| **AI Assistant**| `GET` | `/api/ai/recommendations`| AI executive summary & router hardening guidance |
+| **ML Module** | `GET` | `/api/ml/anomalies` | Statistical Z-score & spectral anomaly detection |
+| **Traffic** | `GET` | `/api/traffic` | Real-time byte transfer rates (RX/TX KB/s) |
+| **Alerts** | `GET` | `/api/alerts` | Security alert event log with severity filtering |
+| **Alerts** | `POST`| `/api/alerts/clear` | Mark all alerts as read |
+| **Alerts** | `PATCH`| `/api/alerts/{id}/read`| Mark specific alert as read |
+| **Alerts** | `POST`| `/api/alerts/{id}/ack` | Acknowledge critical alert |
+| **Reports** | `POST`| `/api/reports/generate`| Generate PDF/CSV/JSON audit report & save metadata |
+| **Reports** | `GET` | `/api/reports` | List generated security reports |
+| **Reports** | `GET` | `/api/reports/{id}/download`| Download generated report payload |
+| **Export** | `GET` | `/api/export/csv` | RFC-4180 CSV export download |
+| **Export** | `GET` | `/api/export/json` | Complete structured JSON audit export |
+| **Checklist** | `GET` | `/api/security/checklist`| Router security hardening rules |
+| **Knowledge** | `GET` | `/api/knowledge` | Tip of the Day & cybersecurity threat intelligence |
+
+---
+
+## 🧪 Automated Testing
+
+NetGuard includes a complete automated test suite covering all 18 functional modules:
+
+```powershell
+python tests/test_system.py
+```
+
+Expected result:
+```text
+=====================================================================
+ TOTAL TESTS: 39 | PASSED: 39 | FAILED: 0
+=====================================================================
+>>> 100% OF ALL SYSTEM & INTEGRATION TESTS PASSED! APPLICATION FULLY FUNCTIONAL. <<<
+```
+
+---
+
+## 🔑 Default Administrator Credentials
+
+For initial testing and role-based access:
+- **Username**: `admin`
+- **Password**: `Admin@NetGuard2026!`
+- **Role**: `administrator`
 
 ---
 

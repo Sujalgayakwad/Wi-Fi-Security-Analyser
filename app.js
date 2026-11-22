@@ -1781,5 +1781,46 @@ setInterval(() => {
   }
 }, 3500);
 
+// Chart Range Toggle
+const btnChartRange = document.querySelector("#btn-chart-range");
+if (btnChartRange) {
+  const ranges = ["Last 24 hours⌄", "Last 7 days⌄", "Last 30 days⌄"];
+  let rangeIdx = 1;
+  btnChartRange.addEventListener("click", () => {
+    rangeIdx = (rangeIdx + 1) % ranges.length;
+    btnChartRange.textContent = ranges[rangeIdx];
+    const labelsEl = document.querySelector(".chart-labels");
+    if (labelsEl) {
+      if (rangeIdx === 0) {
+        labelsEl.innerHTML = "<span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span>";
+      } else if (rangeIdx === 1) {
+        labelsEl.innerHTML = "<span>Day 1</span><span>Day 3</span><span>Day 5</span><span>Today</span>";
+      } else {
+        labelsEl.innerHTML = "<span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>";
+      }
+    }
+    showMessage(`Chart range updated to ${ranges[rangeIdx].replace("⌄", "")}`, false);
+  });
+}
+
+// Topbar alerts notification bell
+const topbarAlertsBtn = document.querySelector("#topbar-alerts-btn");
+if (topbarAlertsBtn) {
+  topbarAlertsBtn.addEventListener("click", () => {
+    showScreen("alerts");
+  });
+}
+
+// AI send buttons
+document.querySelectorAll("#ai-send-btn").forEach((btn) => {
+  btn.addEventListener("click", (e) => {
+    const form = btn.closest("form");
+    if (form) {
+      e.preventDefault();
+      form.dispatchEvent(new Event("submit", { cancelable: true }));
+    }
+  });
+});
+
 // Initial Load
 loadDashboard();

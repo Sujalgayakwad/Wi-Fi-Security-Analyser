@@ -2,6 +2,8 @@ import os
 import io
 import csv
 import json
+import uuid
+import hashlib
 import sqlite3
 import datetime
 from typing import Dict, Any, List, Optional
@@ -19,14 +21,88 @@ ALLOWED_SETTINGS = {
 
 app = Flask(__name__, static_folder=".", static_url_path="")
 
+# -------------------------------------------------------------
+# Password Hashing and Auth Utilities
+# -------------------------------------------------------------
+def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
+    if not salt:
+        salt = uuid.uuid4().hex
+    key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)
+    return key.hex(), salt
+
+def verify_password(password: str, salt: str, expected_hash: str) -> bool:
+    hashed, _ = hash_password(password, salt)
+    return hashed == expected_hash
+
+def get_current_user(db, req) -> Optional[Dict[str, Any]]:
+    auth_header = req.headers.get("Authorization", "")
+    token = None
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "token" in req.args:
+        token = req.args.get("token")
+
+    if not token:
+        return None
+
+    cur = db.cursor()
+    cur.execute("""
+        SELECT u.id, u.username, u.email, u.role, u.created_at, u.last_login
+        FROM users u
+        JOIN user_tokens t ON u.id = t.user_id
+        WHERE t.token = ? AND t.expires_at > datetime('now')
+    """, (token,))
+    row = cur.fetchone()
+    return dict(row) if row else None
+
+# -------------------------------------------------------------
+# Database Connection and Migrations
+# -------------------------------------------------------------
 def get_db():
     conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 def init_db():
     with get_db() as db:
         cur = db.cursor()
+
+        # 1. Users & Authentication
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'analyst',
+                created_at TEXT NOT NULL,
+                last_login TEXT DEFAULT ''
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_tokens (
+                token TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Seed Default Administrator if users table is empty
+        cur.execute("SELECT COUNT(*) FROM users")
+        if cur.fetchone()[0] == 0:
+            p_hash, p_salt = hash_password("Admin@NetGuard2026!")
+            cur.execute("""
+                INSERT INTO users (username, email, password_hash, salt, role, created_at, last_login)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, ("admin", "admin@netguard.local", p_hash, p_salt, "administrator", datetime.datetime.now().strftime(SCAN_TIME_FORMAT), ""))
+
+        # 2. Network table
         cur.execute("""
             CREATE TABLE IF NOT EXISTS network (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -38,6 +114,8 @@ def init_db():
                 encryption TEXT NOT NULL
             )
         """)
+
+        # 3. Devices & History
         cur.execute("""
             CREATE TABLE IF NOT EXISTS devices (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,6 +131,61 @@ def init_db():
                 is_trusted INTEGER DEFAULT 0
             )
         """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_devices_ip ON devices(ip_address)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_devices_mac ON devices(mac_address)")
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS device_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                device_id INTEGER,
+                ip_address TEXT NOT NULL,
+                mac_address TEXT NOT NULL,
+                status TEXT NOT NULL,
+                seen_at TEXT NOT NULL,
+                FOREIGN KEY(device_id) REFERENCES devices(id) ON DELETE SET NULL
+            )
+        """)
+
+        # 4. Scans & Sessions
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scan_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_uuid TEXT UNIQUE NOT NULL,
+                scanned_at TEXT NOT NULL,
+                trigger_type TEXT NOT NULL DEFAULT 'manual',
+                total_networks INTEGER NOT NULL DEFAULT 0,
+                secure_networks INTEGER NOT NULL DEFAULT 0,
+                open_networks INTEGER NOT NULL DEFAULT 0,
+                threats_count INTEGER NOT NULL DEFAULT 0,
+                average_score INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_sessions_time ON scan_sessions(scanned_at)")
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS scan_results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER,
+                ssid TEXT NOT NULL,
+                bssid TEXT NOT NULL,
+                signal_percent INTEGER NOT NULL,
+                signal_dbm INTEGER NOT NULL,
+                band TEXT NOT NULL,
+                channel INTEGER NOT NULL,
+                authentication TEXT NOT NULL,
+                encryption TEXT NOT NULL,
+                security_score INTEGER NOT NULL,
+                security_rating TEXT NOT NULL,
+                vendor TEXT NOT NULL,
+                is_evil_twin INTEGER NOT NULL DEFAULT 0,
+                is_duplicate INTEGER NOT NULL DEFAULT 0,
+                scanned_at TEXT NOT NULL,
+                FOREIGN KEY(session_id) REFERENCES scan_sessions(id) ON DELETE CASCADE
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_scanres_bssid ON scan_results(bssid)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_scanres_ssid ON scan_results(ssid)")
+
         cur.execute("""
             CREATE TABLE IF NOT EXISTS scans (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,6 +196,95 @@ def init_db():
                 result TEXT NOT NULL
             )
         """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_scans_network ON scans(network_name)")
+
+        # 5. Security Findings
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS security_findings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                finding_id TEXT NOT NULL,
+                session_id INTEGER,
+                network_identifier TEXT NOT NULL,
+                bssid TEXT DEFAULT '',
+                finding_name TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                risk_level TEXT NOT NULL,
+                description TEXT NOT NULL,
+                evidence TEXT NOT NULL,
+                remediation TEXT NOT NULL,
+                detection_time TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'ACTIVE'
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_findings_sev ON security_findings(severity)")
+
+        # 6. Security Scores History
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS security_scores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                network_name TEXT NOT NULL,
+                bssid TEXT NOT NULL,
+                score INTEGER NOT NULL,
+                rating TEXT NOT NULL,
+                factors_json TEXT NOT NULL,
+                calculated_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_secscore_name ON security_scores(network_name)")
+
+        # 7. Threat Events History
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS threat_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                threat_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                status TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                affected_network TEXT NOT NULL,
+                bssid TEXT DEFAULT '',
+                vendor TEXT DEFAULT '',
+                evidence TEXT DEFAULT '',
+                confidence TEXT DEFAULT 'HIGH',
+                detected_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_threats_type ON threat_events(threat_type)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_threats_sev ON threat_events(severity)")
+
+        # 8. Performance History
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS performance_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_host TEXT NOT NULL,
+                avg_latency_ms INTEGER NOT NULL,
+                min_latency_ms INTEGER NOT NULL,
+                max_latency_ms INTEGER NOT NULL,
+                jitter_ms INTEGER NOT NULL,
+                loss_percent INTEGER NOT NULL,
+                rx_speed_kbps REAL NOT NULL,
+                tx_speed_kbps REAL NOT NULL,
+                quality_score INTEGER NOT NULL,
+                quality_rating TEXT NOT NULL,
+                stability_percent INTEGER NOT NULL,
+                measured_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_perf_time ON performance_history(measured_at)")
+
+        # 9. Reports
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                report_uuid TEXT UNIQUE NOT NULL,
+                report_type TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                summary_json TEXT NOT NULL,
+                generated_at TEXT NOT NULL
+            )
+        """)
+
+        # 10. Settings & Alerts
         cur.execute("""
             CREATE TABLE IF NOT EXISTS settings (
                 key TEXT PRIMARY KEY,
@@ -77,11 +299,13 @@ def init_db():
                 severity TEXT NOT NULL,
                 category TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                is_read INTEGER DEFAULT 0
+                is_read INTEGER DEFAULT 0,
+                acknowledged INTEGER DEFAULT 0
             )
         """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_alerts_read ON alerts(is_read)")
 
-        # Backward compatibility column migrations for existing devices table
+        # Backward compatibility column migrations
         for col, col_type in [
             ("mac_address", "TEXT DEFAULT ''"),
             ("vendor", "TEXT DEFAULT ''"),
@@ -93,6 +317,11 @@ def init_db():
                 cur.execute(f"ALTER TABLE devices ADD COLUMN {col} {col_type}")
             except sqlite3.OperationalError:
                 pass
+
+        try:
+            cur.execute("ALTER TABLE alerts ADD COLUMN acknowledged INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
 
         # Seeds
         cur.execute("SELECT COUNT(*) FROM network")
@@ -135,11 +364,11 @@ def init_db():
         cur.execute("SELECT COUNT(*) FROM alerts")
         if cur.fetchone()[0] == 0:
             alerts_seed = [
-                ("Protected WPA2 Connection Established", "Authorized client connected with AES-CCMP encryption.", "LOW", "NETWORK", "Today, 12:05 PM", 0),
-                ("Unencrypted Airspace Broadcast", "One or more nearby Wi-Fi networks advertise Open encryption without authentication.", "MEDIUM", "SECURITY", "Today, 11:30 AM", 0)
+                ("Protected WPA2 Connection Established", "Authorized client connected with AES-CCMP encryption.", "LOW", "NETWORK", "Today, 12:05 PM", 0, 0),
+                ("Unencrypted Airspace Broadcast", "One or more nearby Wi-Fi networks advertise Open encryption without authentication.", "MEDIUM", "SECURITY", "Today, 11:30 AM", 0, 0)
             ]
             cur.executemany(
-                "INSERT INTO alerts (title, message, severity, category, created_at, is_read) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO alerts (title, message, severity, category, created_at, is_read, acknowledged) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 alerts_seed
             )
 
@@ -174,6 +403,20 @@ def sync_current_network(db) -> Dict[str, Any]:
                 curr["securityScore"],
                 curr["encryption"]
             ))
+
+        # Log score calculation history
+        cur.execute("""
+            INSERT INTO security_scores (network_name, bssid, score, rating, factors_json, calculated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            curr["ssid"],
+            curr["bssid"],
+            curr["securityScore"],
+            curr["securityRating"],
+            json.dumps(["Authentication: " + curr["encryption"], "Cipher: " + curr.get("cipher", "CCMP")]),
+            datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+        ))
+
         db.commit()
 
         net = dict(curr)
@@ -208,7 +451,44 @@ def get_live_or_stored_devices(db, network_name: str, is_connected: bool) -> Lis
     if is_connected:
         live = scanner.scan_local_devices(network_name)
         if live:
+            cur = db.cursor()
+            now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+            for dev in live:
+                # Find or insert in devices table to ensure valid FK
+                cur.execute("SELECT id, is_trusted FROM devices WHERE mac_address = ? OR ip_address = ?", (dev["mac_address"], dev["ip_address"]))
+                existing = cur.fetchone()
+                if existing:
+                    d_id = existing[0]
+                    dev["is_trusted"] = bool(existing[1])
+                    cur.execute("UPDATE devices SET last_seen = ?, status = 'online' WHERE id = ?", (now_str, d_id))
+                else:
+                    cur.execute("""
+                        INSERT INTO devices (name, platform, ip_address, status, last_seen, mac_address, vendor, device_type, first_seen, is_trusted)
+                        VALUES (?, ?, ?, 'online', ?, ?, ?, ?, ?, ?)
+                    """, (
+                        dev["name"], dev["platform"], dev["ip_address"], now_str,
+                        dev["mac_address"], dev["vendor"], dev["device_type"], now_str,
+                        1 if dev.get("is_trusted") else 0
+                    ))
+                    d_id = cur.lastrowid
+
+                dev["id"] = d_id
+                dev["connected_wifi"] = network_name
+
+                # Log presence into device_history
+                cur.execute("""
+                    INSERT INTO device_history (device_id, ip_address, mac_address, status, seen_at)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    d_id,
+                    dev["ip_address"],
+                    dev["mac_address"],
+                    dev["status"],
+                    now_str
+                ))
+            db.commit()
             return live
+
     cur = db.cursor()
     cur.execute("SELECT * FROM devices ORDER BY id")
     rows = [dict(r) for r in cur.fetchall()]
@@ -238,7 +518,271 @@ def qrcode_script():
     return send_from_directory(APP_DIR, "qrcode.js", mimetype="application/javascript")
 
 # -------------------------------------------------------------
-# REST API Endpoints
+# AUTHENTICATION ENDPOINTS (Section 15, 17)
+# -------------------------------------------------------------
+@app.route("/api/auth/register", methods=["POST"])
+def auth_register():
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    email = data.get("email", "").strip()
+    password = data.get("password", "")
+
+    if not username or not email or not password:
+        return jsonify({"error": "Username, email, and password are required."}), 400
+
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters long."}), 400
+
+    p_hash, p_salt = hash_password(password)
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT id FROM users WHERE username = ? OR email = ?", (username, email))
+        if cur.fetchone():
+            return jsonify({"error": "Username or email is already registered."}), 409
+
+        cur.execute("""
+            INSERT INTO users (username, email, password_hash, salt, role, created_at, last_login)
+            VALUES (?, ?, ?, ?, 'analyst', ?, ?)
+        """, (username, email, p_hash, p_salt, now_str, now_str))
+        user_id = cur.lastrowid
+
+        token = uuid.uuid4().hex
+        expires = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+        cur.execute("INSERT INTO user_tokens VALUES (?, ?, ?, ?)", (token, user_id, now_str, expires))
+        db.commit()
+
+        return jsonify({
+            "message": "User registered successfully.",
+            "token": token,
+            "user": {
+                "id": user_id,
+                "username": username,
+                "email": email,
+                "role": "analyst"
+            }
+        }), 201
+
+@app.route("/api/auth/login", methods=["POST"])
+def auth_login():
+    data = request.get_json(silent=True) or {}
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
+
+    if not username or not password:
+        return jsonify({"error": "Username and password are required."}), 400
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM users WHERE username = ? OR email = ?", (username, username))
+        row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "Invalid username or password."}), 401
+
+        user = dict(row)
+        if not verify_password(password, user["salt"], user["password_hash"]):
+            return jsonify({"error": "Invalid username or password."}), 401
+
+        token = uuid.uuid4().hex
+        now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+        expires = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+
+        cur.execute("INSERT INTO user_tokens VALUES (?, ?, ?, ?)", (token, user["id"], now_str, expires))
+        cur.execute("UPDATE users SET last_login = ? WHERE id = ?", (now_str, user["id"]))
+        db.commit()
+
+        return jsonify({
+            "message": "Login successful.",
+            "token": token,
+            "user": {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"],
+                "role": user["role"],
+                "last_login": now_str
+            }
+        })
+
+@app.route("/api/auth/logout", methods=["POST"])
+def auth_logout():
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header[7:].strip() if auth_header.startswith("Bearer ") else request.args.get("token")
+    if token:
+        with get_db() as db:
+            cur = db.cursor()
+            cur.execute("DELETE FROM user_tokens WHERE token = ?", (token,))
+            db.commit()
+    return jsonify({"message": "Logged out successfully."})
+
+@app.route("/api/auth/profile", methods=["GET"])
+def auth_profile():
+    with get_db() as db:
+        user = get_current_user(db, request)
+        if user:
+            return jsonify({"user": user, "authenticated": True})
+        return jsonify({
+            "authenticated": False,
+            "user": {
+                "username": "guest",
+                "role": "visitor"
+            }
+        })
+
+# -------------------------------------------------------------
+# WI-FI SCANNING & SESSIONS (Section 3)
+# -------------------------------------------------------------
+@app.route("/api/scans/start", methods=["POST"])
+@app.route("/api/scan", methods=["POST"])
+def record_scan():
+    trigger = request.json.get("trigger", "manual") if request.is_json and request.json else "manual"
+    scanned = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+    threats = scanner.detect_threats(scanned, conn)
+
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    session_uuid = uuid.uuid4().hex
+
+    total_net = len(scanned)
+    open_net = sum(1 for n in scanned if "open" in n.get("authentication", "").lower() or n.get("encryption", "").lower() == "none")
+    secure_net = total_net - open_net
+    avg_score = round(sum(n.get("securityScore", 80) for n in scanned) / total_net) if total_net > 0 else 82
+
+    with get_db() as db:
+        cur = db.cursor()
+        # Record session
+        cur.execute("""
+            INSERT INTO scan_sessions (session_uuid, scanned_at, trigger_type, total_networks, secure_networks, open_networks, threats_count, average_score)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (session_uuid, now_str, trigger, total_net, secure_net, open_net, len(threats), avg_score))
+        session_id = cur.lastrowid
+
+        # Record granular results
+        for n in scanned:
+            cur.execute("""
+                INSERT INTO scan_results (session_id, ssid, bssid, signal_percent, signal_dbm, band, channel, authentication, encryption, security_score, security_rating, vendor, is_evil_twin, is_duplicate, scanned_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                session_id, n.get("ssid"), n.get("bssid"), n.get("signalPercent", 50),
+                n.get("signal_dbm", -70), n.get("band", "2.4 GHz"), n.get("channel", 11),
+                n.get("authentication", "Unknown"), n.get("encryption", "Unknown"),
+                n.get("securityScore", 80), n.get("securityRating", "Good"),
+                n.get("vendor", ""), 1 if n.get("isEvilTwin") else 0,
+                1 if n.get("isDuplicate") else 0, now_str
+            ))
+
+        # Legacy scans table entry for backwards compatibility
+        cur.execute("""
+            INSERT INTO scans (network_name, scanned_at, encryption, score, result)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            conn.get("ssid") if conn else (scanned[0].get("ssid") if scanned else "Airspace"),
+            now_str,
+            conn.get("encryption") if conn else "WPA2",
+            conn.get("securityScore", avg_score) if conn else avg_score,
+            "GOOD" if (conn.get("securityScore", avg_score) if conn else avg_score) >= 70 else "RISKY"
+        ))
+
+        # Record threats to threat_events
+        for t in threats:
+            cur.execute("""
+                INSERT INTO threat_events (threat_type, severity, status, title, description, affected_network, bssid, vendor, evidence, confidence, detected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                t.get("type"), t.get("severity"), t.get("status"), t.get("title"),
+                t.get("description"), t.get("affectedNetwork"), t.get("bssid", ""),
+                t.get("vendor", ""), t.get("evidence", ""), t.get("confidence", "HIGH"), now_str
+            ))
+
+        db.commit()
+
+    return jsonify({
+        "sessionId": session_id,
+        "sessionUuid": session_uuid,
+        "scanned_at": now_str,
+        "totalNetworks": total_net,
+        "averageScore": avg_score,
+        "networks": scanned,
+        "threats": threats,
+        "status": "COMPLETED"
+    }), 201
+
+@app.route("/api/scans", methods=["GET"])
+@app.route("/api/history", methods=["GET"])
+def get_scans():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM scans ORDER BY id DESC LIMIT 50")
+        scans = [dict(r) for r in cur.fetchall()]
+        return jsonify(scans)
+
+@app.route("/api/scans/<int:scan_id>", methods=["GET"])
+def get_scan_details(scan_id: int):
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM scan_sessions WHERE id = ?", (scan_id,))
+        sess = cur.fetchone()
+        if not sess:
+            return jsonify({"error": "Scan session not found"}), 404
+        cur.execute("SELECT * FROM scan_results WHERE session_id = ?", (scan_id,))
+        results = [dict(r) for r in cur.fetchall()]
+        return jsonify({"session": dict(sess), "networks": results})
+
+@app.route("/api/wifi/networks", methods=["GET"])
+@app.route("/api/networks", methods=["GET"])
+def wifi_networks():
+    scanned = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+    threats = scanner.detect_threats(scanned, conn)
+    return jsonify({
+        "networks": scanned,
+        "scannedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT),
+        "scanSource": "Live Windows 802.11 WLAN Access Points (BSSID Discovery)",
+        "threats": threats,
+        "totalCount": len(scanned)
+    })
+
+@app.route("/api/networks/<path:ssid>", methods=["GET"])
+def get_network_by_ssid(ssid: str):
+    scanned = scanner.scan_available_networks()
+    target = next((n for n in scanned if n.get("ssid").lower() == ssid.lower()), None)
+    if not target:
+        return jsonify({"error": "Network not visible in current airspace."}), 404
+    return jsonify(target)
+
+@app.route("/api/wifi/analyze", methods=["POST"])
+def analyze_wifi_network():
+    data = request.get_json(silent=True) or {}
+    ssid = data.get("ssid")
+    if not ssid:
+        return jsonify({"error": "Select a visible WiFi network to analyze."}), 400
+
+    scanned = scanner.scan_available_networks()
+    target = next((n for n in scanned if n.get("ssid") == ssid), None)
+    if not target:
+        return jsonify({"error": "That network is no longer visible. Refresh the WiFi list and try again."}), 404
+
+    scanned_at = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    score = target.get("securityScore", 50)
+    result = "GOOD" if score >= 70 else "RISKY"
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute(
+            "INSERT INTO scans (network_name, scanned_at, encryption, score, result) VALUES (?, ?, ?, ?, ?)",
+            (target["ssid"], scanned_at, f"{target['authentication']} / {target['encryption']}", score, result)
+        )
+        db.commit()
+
+    return jsonify({
+        "network": target,
+        "scannedAt": scanned_at,
+        "result": result,
+        "assessmentScope": "Based on broadcast 802.11 BSSID beacon frames, encryption ciphers, and authentication suites advertised by the access point."
+    }), 201
+
+# -------------------------------------------------------------
+# DASHBOARD API
 # -------------------------------------------------------------
 @app.route("/api/dashboard", methods=["GET"])
 def dashboard():
@@ -306,6 +850,155 @@ def detect_network():
             "status": "recognized" if network.get("connected") else "disconnected"
         })
 
+# -------------------------------------------------------------
+# SECURITY ANALYSIS & FINDINGS (Section 4, 5)
+# -------------------------------------------------------------
+@app.route("/api/security/analyze", methods=["POST"])
+def run_security_analysis():
+    visible = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+    threats = scanner.detect_threats(visible, conn)
+    analysis = scanner.get_ai_security_analysis(conn, visible, threats)
+
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    findings = []
+
+    with get_db() as db:
+        cur = db.cursor()
+        for t in threats:
+            f_id = f"FND-{uuid.uuid4().hex[:6].upper()}"
+            cur.execute("""
+                INSERT INTO security_findings (finding_id, network_identifier, bssid, finding_name, severity, risk_level, description, evidence, remediation, detection_time, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE')
+            """, (
+                f_id, t.get("affectedNetwork"), t.get("bssid", ""), t.get("title"),
+                t.get("severity"), t.get("severity"), t.get("description"),
+                t.get("evidence", "Observable broadcast beacon frames."),
+                t.get("recommendation", "Hardening router configuration."),
+                now_str
+            ))
+            findings.append({
+                "findingId": f_id,
+                "title": t.get("title"),
+                "severity": t.get("severity"),
+                "network": t.get("affectedNetwork"),
+                "remediation": t.get("recommendation")
+            })
+        db.commit()
+
+    return jsonify({
+        "status": "SUCCESS",
+        "findingsCount": len(findings),
+        "findings": findings,
+        "analysis": analysis,
+        "analyzedAt": now_str
+    })
+
+@app.route("/api/security/findings", methods=["GET"])
+def get_security_findings():
+    sev_filter = request.args.get("severity")
+    status_filter = request.args.get("status")
+
+    with get_db() as db:
+        cur = db.cursor()
+        query = "SELECT * FROM security_findings WHERE 1=1"
+        params = []
+        if sev_filter:
+            query += " AND severity = ?"
+            params.append(sev_filter.upper())
+        if status_filter:
+            query += " AND status = ?"
+            params.append(status_filter.upper())
+
+        query += " ORDER BY id DESC LIMIT 100"
+        cur.execute(query, params)
+        return jsonify([dict(r) for r in cur.fetchall()])
+
+@app.route("/api/security/score", methods=["GET"])
+def get_security_score():
+    conn = scanner.get_connected_wifi()
+    current_score = conn.get("securityScore", 0) if conn else 0
+    network_name = conn.get("ssid", "No Network") if conn else "No Network"
+
+    prev_score = None
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("""
+            SELECT score, calculated_at FROM security_scores
+            WHERE network_name = ?
+            ORDER BY id DESC LIMIT 2
+        """, (network_name,))
+        rows = cur.fetchall()
+        if len(rows) > 1:
+            prev_score = rows[1]["score"]
+
+    diff = (current_score - prev_score) if prev_score is not None else 0
+    return jsonify({
+        "network": network_name,
+        "currentScore": current_score,
+        "previousScore": prev_score,
+        "difference": diff,
+        "rating": scanner.classify_score(current_score),
+        "explanation": f"Score calculated based on link encryption ({conn.get('encryption', 'None') if conn else 'Disconnected'}), authentication suite, and rogue AP proximity."
+    })
+
+@app.route("/api/security/history", methods=["GET"])
+def get_security_history():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM security_scores ORDER BY id DESC LIMIT 50")
+        return jsonify([dict(r) for r in cur.fetchall()])
+
+# -------------------------------------------------------------
+# THREAT DETECTION (Section 6)
+# -------------------------------------------------------------
+@app.route("/api/threats", methods=["GET"])
+def get_threats():
+    visible = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+    threats = scanner.detect_threats(visible, conn)
+    return jsonify({
+        "threats": threats,
+        "count": len(threats),
+        "checkedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+@app.route("/api/threats/analyze", methods=["POST"])
+def analyze_threats():
+    visible = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+    threats = scanner.detect_threats(visible, conn)
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+
+    with get_db() as db:
+        cur = db.cursor()
+        for t in threats:
+            cur.execute("""
+                INSERT INTO threat_events (threat_type, severity, status, title, description, affected_network, bssid, vendor, evidence, confidence, detected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                t.get("type"), t.get("severity"), t.get("status"), t.get("title"),
+                t.get("description"), t.get("affectedNetwork"), t.get("bssid", ""),
+                t.get("vendor", ""), t.get("evidence", ""), t.get("confidence", "HIGH"), now_str
+            ))
+        db.commit()
+
+    return jsonify({
+        "threatsCount": len(threats),
+        "threats": threats,
+        "evaluatedAt": now_str
+    })
+
+@app.route("/api/threats/history", methods=["GET"])
+def get_threats_history():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM threat_events ORDER BY id DESC LIMIT 50")
+        return jsonify([dict(r) for r in cur.fetchall()])
+
+# -------------------------------------------------------------
+# CONNECTED DEVICES (Section 7)
+# -------------------------------------------------------------
 @app.route("/api/devices", methods=["GET"])
 def devices():
     with get_db() as db:
@@ -313,6 +1006,22 @@ def devices():
         is_connected = bool(network.get("connected"))
         net_name = network.get("name", "")
         return jsonify(get_live_or_stored_devices(db, net_name, is_connected))
+
+@app.route("/api/devices/discover", methods=["POST"])
+def discover_devices():
+    with get_db() as db:
+        network = sync_current_network(db)
+        is_connected = bool(network.get("connected"))
+        net_name = network.get("name", "")
+        devices_list = get_live_or_stored_devices(db, net_name, is_connected)
+        return jsonify({"count": len(devices_list), "devices": devices_list})
+
+@app.route("/api/devices/history", methods=["GET"])
+def get_devices_history():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM device_history ORDER BY id DESC LIMIT 50")
+        return jsonify([dict(r) for r in cur.fetchall()])
 
 @app.route("/api/devices/<int:device_id>/trust", methods=["POST"])
 def toggle_device_trust(device_id: int):
@@ -328,107 +1037,49 @@ def toggle_device_trust(device_id: int):
             return jsonify({"id": device_id, "is_trusted": new_val == 1})
         return jsonify({"id": device_id, "is_trusted": True})
 
-@app.route("/api/history", methods=["GET"])
-def history():
+# -------------------------------------------------------------
+# NETWORK PERFORMANCE (Section 8)
+# -------------------------------------------------------------
+@app.route("/api/performance", methods=["GET"])
+@app.route("/api/performance/test", methods=["POST"])
+def performance():
+    perf = scanner.measure_network_performance()
+
     with get_db() as db:
         cur = db.cursor()
-        cur.execute("SELECT * FROM scans ORDER BY id DESC")
+        cur.execute("""
+            INSERT INTO performance_history (target_host, avg_latency_ms, min_latency_ms, max_latency_ms, jitter_ms, loss_percent, rx_speed_kbps, tx_speed_kbps, quality_score, quality_rating, stability_percent, measured_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            perf.get("targetHost", "8.8.8.8"),
+            perf.get("avgLatencyMs", 0),
+            perf.get("minLatencyMs", 0),
+            perf.get("maxLatencyMs", 0),
+            perf.get("jitterMs", 0),
+            perf.get("packetLossPercent", 0),
+            perf.get("rxSpeedKbps", 0.0),
+            perf.get("txSpeedKbps", 0.0),
+            perf.get("connectionQualityScore", 100),
+            perf.get("qualityRating", "Good"),
+            perf.get("stabilityPercent", 95),
+            perf.get("measuredAt", datetime.datetime.now().strftime("%I:%M:%S %p"))
+        ))
+        db.commit()
+
+    return jsonify(perf)
+
+@app.route("/api/performance/history", methods=["GET"])
+def get_performance_history():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM performance_history ORDER BY id DESC LIMIT 30")
         return jsonify([dict(r) for r in cur.fetchall()])
 
-@app.route("/api/scans", methods=["GET"])
-def get_scans():
-    with get_db() as db:
-        cur = db.cursor()
-        cur.execute("SELECT * FROM scans ORDER BY id DESC")
-        return jsonify([dict(r) for r in cur.fetchall()])
-
-@app.route("/api/scan", methods=["POST"])
-def record_scan():
-    with get_db() as db:
-        cur = db.cursor()
-        cur.execute("SELECT * FROM network WHERE id = 1")
-        row = cur.fetchone()
-        if not row:
-            return jsonify({"error": "Missing network record"}), 500
-
-        network = dict(row)
-        scanned_at = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
-        score = network.get("score", 82)
-        result = "GOOD" if score >= 70 else "RISKY"
-
-        cur.execute(
-            "INSERT INTO scans (network_name, scanned_at, encryption, score, result) VALUES (?, ?, ?, ?, ?)",
-            (network.get("name"), scanned_at, network.get("encryption"), score, result)
-        )
-        db.commit()
-
-        return jsonify({
-            "network": network,
-            "scanned_at": scanned_at,
-            "score": score,
-            "result": result
-        }), 201
-
-@app.route("/api/wifi/networks", methods=["GET"])
-def wifi_networks():
-    scanned = scanner.scan_available_networks()
-    conn = scanner.get_connected_wifi()
-    threats = scanner.detect_threats(scanned, conn)
-    return jsonify({
-        "networks": scanned,
-        "scannedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT),
-        "scanSource": "Live Windows 802.11 WLAN Access Points (BSSID Discovery)",
-        "threats": threats,
-        "totalCount": len(scanned)
-    })
-
-@app.route("/api/wifi/analyze", methods=["POST"])
-def analyze_wifi_network():
-    data = request.get_json(silent=True) or {}
-    ssid = data.get("ssid")
-    if not ssid:
-        return jsonify({"error": "Select a visible WiFi network to analyze."}), 400
-
-    scanned = scanner.scan_available_networks()
-    target = next((n for n in scanned if n.get("ssid") == ssid), None)
-    if not target:
-        return jsonify({"error": "That network is no longer visible. Refresh the WiFi list and try again."}), 404
-
-    scanned_at = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
-    score = target.get("securityScore", 50)
-    result = "GOOD" if score >= 70 else "RISKY"
-
-    with get_db() as db:
-        cur = db.cursor()
-        cur.execute(
-            "INSERT INTO scans (network_name, scanned_at, encryption, score, result) VALUES (?, ?, ?, ?, ?)",
-            (target["ssid"], scanned_at, f"{target['authentication']} / {target['encryption']}", score, result)
-        )
-        db.commit()
-
-    return jsonify({
-        "network": target,
-        "scannedAt": scanned_at,
-        "result": result,
-        "assessmentScope": "Based on broadcast 802.11 BSSID beacon frames, encryption ciphers, and authentication suites advertised by the access point."
-    }), 201
-
-@app.route("/api/settings", methods=["PATCH"])
-def update_settings():
-    values = request.get_json(silent=True) or {}
-    updates = {k: str(v) for k, v in values.items() if k in ALLOWED_SETTINGS}
-    if not updates:
-        return jsonify({"error": "No supported settings were provided"}), 400
-
-    with get_db() as db:
-        cur = db.cursor()
-        for k, v in updates.items():
-            cur.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (k, v))
-        db.commit()
-
-    return jsonify(updates)
-
+# -------------------------------------------------------------
+# AI ASSISTANT & KNOWLEDGE (Section 9)
+# -------------------------------------------------------------
 @app.route("/api/ai/chat", methods=["POST"])
+@app.route("/api/assistant/chat", methods=["POST"])
 def ai_chat():
     data = request.get_json(silent=True) or {}
     question = data.get("question", "")
@@ -437,62 +1088,8 @@ def ai_chat():
     threats = scanner.detect_threats(visible, conn)
     return jsonify(scanner.process_ai_chat(question, conn, visible, threats))
 
-@app.route("/api/performance", methods=["GET"])
-def performance():
-    return jsonify(scanner.measure_network_performance())
-
-@app.route("/api/ml/anomalies", methods=["GET"])
-def ml_anomalies():
-    visible = scanner.scan_available_networks()
-    conn = scanner.get_connected_wifi()
-    return jsonify(scanner.detect_ml_anomalies(visible, conn))
-
-@app.route("/api/threats", methods=["GET"])
-def get_threats():
-    visible = scanner.scan_available_networks()
-    conn = scanner.get_connected_wifi()
-    threats = scanner.detect_threats(visible, conn)
-    return jsonify({
-        "threats": threats,
-        "count": len(threats),
-        "checkedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
-    })
-
-@app.route("/api/traffic", methods=["GET"])
-def traffic():
-    return jsonify(scanner.get_traffic_metrics())
-
-@app.route("/api/alerts", methods=["GET"])
-def get_alerts():
-    with get_db() as db:
-        cur = db.cursor()
-        cur.execute("SELECT * FROM alerts ORDER BY id DESC LIMIT 50")
-        return jsonify([dict(r) for r in cur.fetchall()])
-
-@app.route("/api/alerts/clear", methods=["POST"])
-def clear_alerts():
-    with get_db() as db:
-        cur = db.cursor()
-        cur.execute("UPDATE alerts SET is_read = 1")
-        db.commit()
-    return jsonify({"status": "success", "message": "All alerts marked as read."})
-
-@app.route("/api/wifi/compare", methods=["GET"])
-def compare_networks():
-    ssids_param = request.args.get("ssids", "").strip()
-    visible = scanner.scan_available_networks()
-    if ssids_param:
-        req_ssids = {s.strip() for s in ssids_param.split(",") if s.strip()}
-        selected = [n for n in visible if n.get("ssid") in req_ssids]
-    else:
-        selected = visible[:3]
-
-    return jsonify({
-        "networks": selected,
-        "timestamp": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
-    })
-
 @app.route("/api/ai/recommendations", methods=["GET"])
+@app.route("/api/assistant/recommendations", methods=["GET"])
 def ai_recommendations():
     conn = scanner.get_connected_wifi()
     visible = scanner.scan_available_networks()
@@ -582,6 +1179,113 @@ def knowledge():
         ]
     })
 
+# -------------------------------------------------------------
+# MACHINE LEARNING MODULE (Section 10)
+# -------------------------------------------------------------
+@app.route("/api/ml/anomalies", methods=["GET"])
+def ml_anomalies():
+    visible = scanner.scan_available_networks()
+    conn = scanner.get_connected_wifi()
+
+    history_records = []
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT ssid, bssid FROM scan_results ORDER BY id DESC LIMIT 100")
+        history_records = [dict(r) for r in cur.fetchall()]
+
+    return jsonify(scanner.detect_ml_anomalies(visible, conn, history_records))
+
+# -------------------------------------------------------------
+# TRAFFIC & COMPARISON
+# -------------------------------------------------------------
+@app.route("/api/traffic", methods=["GET"])
+def traffic():
+    return jsonify(scanner.get_traffic_metrics())
+
+@app.route("/api/wifi/compare", methods=["GET"])
+def compare_networks():
+    ssids_param = request.args.get("ssids", "").strip()
+    visible = scanner.scan_available_networks()
+    if ssids_param:
+        req_ssids = {s.strip() for s in ssids_param.split(",") if s.strip()}
+        selected = [n for n in visible if n.get("ssid") in req_ssids]
+    else:
+        selected = visible[:3]
+
+    return jsonify({
+        "networks": selected,
+        "timestamp": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+# -------------------------------------------------------------
+# ALERTS & NOTIFICATIONS (Section 12)
+# -------------------------------------------------------------
+@app.route("/api/alerts", methods=["GET"])
+@app.route("/api/notifications", methods=["GET"])
+def get_alerts():
+    sev = request.args.get("severity")
+    with get_db() as db:
+        cur = db.cursor()
+        if sev and sev.upper() != "ALL":
+            cur.execute("SELECT * FROM alerts WHERE severity = ? ORDER BY id DESC LIMIT 50", (sev.upper(),))
+        else:
+            cur.execute("SELECT * FROM alerts ORDER BY id DESC LIMIT 50")
+        return jsonify([dict(r) for r in cur.fetchall()])
+
+@app.route("/api/alerts/clear", methods=["POST"])
+def clear_alerts():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("UPDATE alerts SET is_read = 1")
+        db.commit()
+    return jsonify({"status": "success", "message": "All alerts marked as read."})
+
+@app.route("/api/alerts/<int:alert_id>/read", methods=["PATCH"])
+@app.route("/api/notifications/<int:alert_id>/read", methods=["PATCH"])
+def mark_alert_read(alert_id: int):
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("UPDATE alerts SET is_read = 1 WHERE id = ?", (alert_id,))
+        db.commit()
+    return jsonify({"id": alert_id, "is_read": 1})
+
+@app.route("/api/alerts/<int:alert_id>/ack", methods=["POST"])
+@app.route("/api/notifications/<int:alert_id>/ack", methods=["POST"])
+def acknowledge_alert(alert_id: int):
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("UPDATE alerts SET acknowledged = 1, is_read = 1 WHERE id = ?", (alert_id,))
+        db.commit()
+    return jsonify({"id": alert_id, "acknowledged": 1, "is_read": 1})
+
+# -------------------------------------------------------------
+# SETTINGS
+# -------------------------------------------------------------
+@app.route("/api/settings", methods=["GET"])
+def get_settings():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM settings")
+        return jsonify({r["key"]: r["value"] for r in cur.fetchall()})
+
+@app.route("/api/settings", methods=["PATCH"])
+def update_settings():
+    values = request.get_json(silent=True) or {}
+    updates = {k: str(v) for k, v in values.items() if k in ALLOWED_SETTINGS}
+    if not updates:
+        return jsonify({"error": "No supported settings were provided"}), 400
+
+    with get_db() as db:
+        cur = db.cursor()
+        for k, v in updates.items():
+            cur.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (k, v))
+        db.commit()
+
+    return jsonify(updates)
+
+# -------------------------------------------------------------
+# REPORTS & EXPORTS (Section 13)
+# -------------------------------------------------------------
 @app.route("/api/export/csv", methods=["GET"])
 def export_csv():
     networks = scanner.scan_available_networks()
@@ -629,6 +1333,72 @@ def export_json():
 def report_data():
     return jsonify(get_report_payload())
 
+@app.route("/api/reports/generate", methods=["POST"])
+def generate_report():
+    data = request.get_json(silent=True) or {}
+    report_type = data.get("type", "JSON").upper()
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    rep_uuid = uuid.uuid4().hex
+    file_name = f"netguard-audit-{rep_uuid[:8]}.{report_type.lower()}"
+
+    payload = get_report_payload()
+    summary = {
+        "network": payload["network"].get("name"),
+        "score": payload["network"].get("score"),
+        "totalScanned": len(payload.get("scannedNetworks", [])),
+        "threats": len(payload.get("threats", [])),
+        "generatedAt": now_str
+    }
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("""
+            INSERT INTO reports (report_uuid, report_type, file_name, summary_json, generated_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (rep_uuid, report_type, file_name, json.dumps(summary), now_str))
+        report_id = cur.lastrowid
+        db.commit()
+
+    return jsonify({
+        "reportId": report_id,
+        "reportUuid": rep_uuid,
+        "fileName": file_name,
+        "type": report_type,
+        "generatedAt": now_str,
+        "downloadUrl": f"/api/reports/{report_id}/download"
+    }), 201
+
+@app.route("/api/reports", methods=["GET"])
+def get_reports_list():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM reports ORDER BY id DESC LIMIT 50")
+        rows = [dict(r) for r in cur.fetchall()]
+        for r in rows:
+            try:
+                r["summary"] = json.loads(r["summary_json"])
+            except Exception:
+                r["summary"] = {}
+        return jsonify(rows)
+
+@app.route("/api/reports/<int:report_id>/download", methods=["GET"])
+def download_report(report_id: int):
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM reports WHERE id = ?", (report_id,))
+        rep = cur.fetchone()
+        if not rep:
+            return jsonify({"error": "Report not found"}), 404
+
+        rep_dict = dict(rep)
+        rep_type = rep_dict["report_type"]
+        file_name = rep_dict["file_name"]
+
+    if rep_type == "CSV":
+        return export_csv()
+    else:
+        return export_json()
+
 def get_report_payload() -> Dict[str, Any]:
     with get_db() as db:
         network = sync_current_network(db)
@@ -638,16 +1408,16 @@ def get_report_payload() -> Dict[str, Any]:
         visible = scanner.scan_available_networks()
         conn = scanner.get_connected_wifi()
         threats = scanner.detect_threats(visible, conn)
-        devices = get_live_or_stored_devices(db, net_name, is_connected)
+        devices_list = get_live_or_stored_devices(db, net_name, is_connected)
         ai_analysis = scanner.get_ai_security_analysis(conn, visible, threats)
-        performance = scanner.measure_network_performance()
+        performance_data = scanner.measure_network_performance()
 
         return {
             "network": network,
-            "devices": devices,
+            "devices": devices_list,
             "threats": threats,
             "aiAnalysis": ai_analysis,
-            "performance": performance,
+            "performance": performance_data,
             "scannedNetworks": visible,
             "generatedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT),
             "auditor": "NetGuard Security Engine v2.0 (Python Edition)",
