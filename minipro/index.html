@@ -1,0 +1,2027 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#06152c" />
+  <title>Wi-Fi Security Analyzer Pro — Next-Gen Cybersecurity Platform</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg class="brand-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" />
+            <path d="M8.5 11a5 5 0 0 1 7 0" />
+            <path d="M10 13.5a2.5 2.5 0 0 1 4 0" />
+            <circle cx="12" cy="16" r="1" fill="currentColor" />
+          </svg>
+        </div>
+        <div><strong>WIFI SECURITY ANALYZER PRO</strong><span>Next-Gen Cyber Platform</span></div>
+      </div>
+      <div class="network-pill">
+        <span class="live-dot"></span>
+        <div><small>Connected to</small><strong id="network-name-sidebar">Home_WiFi</strong><small
+            id="network-details-sidebar">5 GHz · Channel 36</small></div>
+        <span class="wifi-symbol">◔</span>
+      </div>
+      <nav class="nav" aria-label="Primary navigation">
+        <div class="nav-section-label">CORE CYBERSECURITY MODULES</div>
+        <button class="nav-item active" data-screen="home"><span>⌂</span>Security Overview</button>
+        <button class="nav-item" data-screen="scan"><span>◉</span>Wi-Fi Network Scanner</button>
+        <button class="nav-item" data-screen="devices"><span>▣</span>Connected Devices <b id="nav-device-badge">3</b></button>
+        <button class="nav-item" data-screen="traffic"><span>⇄</span>Network Traffic Monitor</button>
+        <button class="nav-item" data-screen="firewall"><span>🛡</span>Firewall Management <b id="nav-firewall-badge" class="badge-success">ON</b></button>
+        <button class="nav-item" data-screen="malware"><span>☣</span>Virus &amp; Malware Detection <b id="nav-malware-badge" class="badge-success">0</b></button>
+        <button class="nav-item" data-screen="vulnerabilities"><span>🔍</span>Vulnerability Scanner</button>
+        <button class="nav-item" data-screen="ids"><span>⚡</span>Intrusion Detection (IDS) <b id="nav-ids-badge" class="badge-alert">ACTIVE</b></button>
+        <button class="nav-item" data-screen="intel"><span>🌐</span>Threat Intelligence</button>
+        <button class="nav-item" data-screen="logs"><span>📋</span>Security Logs</button>
+        <button class="nav-item" data-screen="reports"><span>📊</span>Reports &amp; Analytics</button>
+        <button class="nav-item" data-screen="settings"><span>⚙</span>Settings</button>
+
+        <div class="nav-section-label" style="margin-top:14px">EXTENDED SECURITY TOOLS</div>
+        <button class="nav-item" data-screen="threats"><span>⚠</span>Threat Detection <b id="nav-threat-badge" class="badge-danger">0</b></button>
+        <button class="nav-item" data-screen="performance"><span>⚡</span>Performance Analyzer</button>
+        <button class="nav-item" data-screen="compare"><span>⇋</span>Wi-Fi Compare</button>
+        <button class="nav-item" data-screen="alerts"><span>🔔</span>Alerts <b id="nav-alert-badge" class="badge-alert">0</b></button>
+        <button class="nav-item" data-screen="ai-chat"><span>✦</span>AI Security Assistant</button>
+        <button class="nav-item" data-screen="knowledge"><span>📚</span>Knowledge &amp; Audit</button>
+        <button class="nav-item" data-screen="history"><span>◷</span>Scan History</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-export-group">
+          <button class="help" id="btn-export-pdf-sidebar"><span>📄</span> PDF Report</button>
+          <button class="help" id="btn-export-csv-sidebar"><span>📊</span> CSV Export</button>
+        </div>
+        <div class="system-monitor-card" id="sidebar-system-monitor" title="NetGuard System Engine: Active & Monitored. Click to refresh live platform.">
+          <div class="monitor-pulse-wrap">
+            <span class="monitor-live-dot"></span>
+            <span class="monitor-pulse-wave"></span>
+          </div>
+          <div class="monitor-info">
+            <span class="monitor-title">AIRSPACE MONITOR</span>
+            <strong class="monitor-status">802.11 Live Shield</strong>
+          </div>
+          <button type="button" class="monitor-refresh-btn" id="btn-sidebar-refresh" title="Sync & Refresh Platform">
+            <span class="refresh-spinner-icon">↻</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="mobile-drawer-backdrop" id="mobile-drawer-backdrop"></div>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle navigation drawer">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </button>
+        <div class="mobile-brand">
+          <div class="brand-mark">
+            <svg class="brand-svg-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" />
+              <path d="M8.5 11a5 5 0 0 1 7 0" />
+              <path d="M10 13.5a2.5 2.5 0 0 1 4 0" />
+              <circle cx="12" cy="16" r="1" fill="currentColor" />
+            </svg>
+          </div><strong>WIFI ANALYZER PRO</strong>
+        </div>
+        <div class="breadcrumbs"><span>Workspace</span><i>/</i><strong id="page-title">Dashboard</strong></div>
+        <div class="topbar-network-pill"><span class="connected-dot"></span><span>Connected to:</span><strong
+            id="network-name-topbar">Home_WiFi</strong></div>
+        <div class="top-actions">
+          <span class="last-scan">Last scan: Today, 12:05 PM</span>
+
+          <!-- Quick Theme Switcher Pill -->
+          <button type="button" class="theme-switcher-pill" id="theme-switcher-btn"
+            title="Cycle Theme (Cyber Dark, Matrix, Synthwave, Light)">
+            <span class="theme-icon" id="theme-icon-indicator">🌙</span>
+            <span class="theme-name" id="theme-name-indicator">Cyber Dark</span>
+          </button>
+
+          <!-- Quick Export Dropdown Group -->
+          <div class="export-dropdown-wrap">
+            <button class="topbar-pdf-button" id="topbar-export-btn" title="Export Security Reports"><span>📥</span>
+              Export ▾</button>
+            <div class="export-menu card" id="topbar-export-menu" hidden>
+              <button type="button" id="menu-export-pdf"><span>📄</span> Download PDF Report</button>
+              <button type="button" id="menu-export-csv"><span>📊</span> Download CSV Data</button>
+              <button type="button" id="menu-export-json"><span>{ }</span> Download JSON Audit</button>
+            </div>
+          </div>
+
+          <button class="topbar-settings-button" data-screen="settings" title="Settings"><span>⚙</span>
+            Settings</button>
+          <button class="icon-button" id="topbar-alerts-btn" aria-label="Notifications" data-screen="alerts"
+            title="View Security Alerts">
+            ♢<em id="alert-dot"></em>
+            <span id="alert-badge-count" class="alert-count-pill" hidden>0</span>
+          </button>
+          <button type="button" class="topbar-refresh-action-btn" id="btn-topbar-refresh" title="Refresh Live Airspace & Telemetry (Double-click to reload)">
+            <span class="refresh-spin-glyph">↻</span>
+            <span class="refresh-btn-text">Refresh</span>
+          </button>
+        </div>
+      </header>
+      <div id="app-message" class="app-message" role="alert" hidden></div>
+
+      <!-- 1. DASHBOARD SCREEN -->
+      <section class="screen active-screen" id="home-screen">
+        <div class="reference-header">
+          <div class="reference-brand">
+            <div class="shield-mark">
+              <svg class="brand-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" />
+                <path d="M8.5 11a5 5 0 0 1 7 0" />
+                <path d="M10 13.5a2.5 2.5 0 0 1 4 0" />
+                <circle cx="12" cy="16" r="1" fill="currentColor" />
+              </svg>
+            </div>
+            <div><strong>NetGuard</strong><small>Wi-Fi Cybersecurity Platform</small></div>
+          </div>
+          <button class="reference-settings" data-screen="settings" title="Open Settings"
+            aria-label="Settings">⚙</button>
+        </div>
+
+        <!-- Mobile Reference Network Card with Password Display -->
+        <article class="reference-network card">
+          <div class="ref-net-body">
+            <span class="connected-dot"></span><span class="reference-label">Connected to</span>
+            <h2 id="network-name-mobile">Home_WiFi</h2>
+            <small id="network-mobile-details">5 GHz &nbsp;·&nbsp; Channel 36 &nbsp;·&nbsp; -48 dBm</small>
+
+            <!-- Connected Wi-Fi Password (Mobile) -->
+            <div class="wifi-password-badge" id="wifi-password-badge-mobile">
+              <span class="key-icon">🔑</span>
+              <span class="password-label">Password:</span>
+              <span class="password-val" id="wifi-pass-val-mobile">••••••••</span>
+              <button type="button" class="pass-toggle-btn" id="toggle-pass-mobile"
+                title="Reveal Wi-Fi Password">Show</button>
+              <button type="button" class="pass-copy-btn" id="copy-pass-mobile" title="Copy Password">⧉</button>
+              <button type="button" class="pass-copy-btn" id="btn-quick-qr-mobile" title="Show Wi-Fi QR Code">📱
+                QR</button>
+            </div>
+          </div>
+          <button class="detect-btn-pill" id="detect-wifi-btn-mobile" title="Recognize live connected Wi-Fi">↻
+            Detect</button>
+          <div class="router-art">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" />
+              <path d="M8.5 11a5 5 0 0 1 7 0" />
+              <path d="M10 13.5a2.5 2.5 0 0 1 4 0" />
+              <circle cx="12" cy="16" r="1" fill="currentColor" />
+            </svg>
+          </div>
+        </article>
+
+        <article class="reference-score card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">SECURITY SCORE</p>
+              <h2>Your network is protected</h2>
+            </div>
+          </div>
+          <div class="reference-score-ring">
+            <div><strong>82</strong><small>/ 100</small><b>GOOD</b></div>
+          </div>
+          <p>Strong encryption and a secure router configuration keep your network safe.</p>
+          <a href="#" data-screen="scan">View security report →</a>
+        </article>
+
+        <div class="shortcut-grid">
+          <button class="shortcut scan-shortcut"
+            data-screen="scan"><span>◉</span><strong>Security<br>Scan</strong></button>
+          <button class="shortcut" data-screen="devices"><span>▣</span><strong>Connected<br>Devices</strong><em
+              id="mob-device-count">3</em></button>
+          <button class="shortcut" data-screen="threats"><span>⚠</span><strong>Threat<br>Detect</strong><em
+              id="mob-threat-count" class="alert-em">0</em></button>
+          <button class="shortcut" data-screen="performance"><span>⚡</span><strong>Network<br>Speed</strong></button>
+          <button class="shortcut" data-screen="ai-chat"><span>✦</span><strong>AI<br>Chat</strong></button>
+          <button class="shortcut" data-screen="history"><span>◷</span><strong>Scan<br>Report</strong></button>
+        </div>
+
+        <div class="reference-section-title"><span>RECENT ACTIVITY</span><a href="#" data-screen="history">View all</a>
+        </div>
+        <div class="reference-activity card">
+          <span class="activity-icon">✓</span>
+          <div><strong>Security scan completed</strong><small>Today, 12:05 PM</small></div>
+          <span class="status-chip good">82 GOOD</span>
+        </div>
+
+        <!-- Desktop Legacy / Enhanced Composition -->
+        <div class="legacy-dashboard">
+          <div class="welcome-row">
+            <div>
+              <p class="eyebrow">CYBERSECURITY COMMAND CENTER</p>
+              <h1 id="welcome-greeting">Good evening<span>✦</span></h1>
+              <p class="muted">Real-time 802.11 airspace monitoring, rogue AP defense, and authorized LAN auditing are
+                active.</p>
+            </div>
+            <div class="welcome-actions">
+              <button class="secondary-button" id="btn-export-pdf-welcome"><span>📄</span> PDF Report</button>
+              <button class="secondary-button" id="btn-export-csv-welcome"><span>📊</span> CSV Export</button>
+              <button class="primary-button scan-button" data-screen="scan"><span>◉</span> Run security scan</button>
+            </div>
+          </div>
+
+          <!-- Cybersecurity Metrics Ribbon -->
+          <div class="kpi-ribbon">
+            <div class="kpi-card card">
+              <span class="kpi-icon blue">📶</span>
+              <div>
+                <small>VISIBLE NETWORKS</small>
+                <strong id="kpi-total-networks">Scanning…</strong>
+              </div>
+              <span class="kpi-sub" id="kpi-secure-networks">0 Secure · 0 Open</span>
+            </div>
+            <div class="kpi-card card">
+              <span class="kpi-icon red">⚠</span>
+              <div>
+                <small>AIRSPACE THREATS</small>
+                <strong id="kpi-threat-count">0 Detected</strong>
+              </div>
+              <a href="#" data-screen="threats" class="kpi-link">Inspect →</a>
+            </div>
+            <div class="kpi-card card">
+              <span class="kpi-icon cyan">⚡</span>
+              <div>
+                <small>NETWORK LATENCY</small>
+                <strong id="kpi-live-latency">24 ms (Good)</strong>
+              </div>
+              <span class="kpi-sub" id="kpi-jitter-sub">0 ms Jitter</span>
+            </div>
+            <div class="kpi-card card">
+              <span class="kpi-icon green">🛡</span>
+              <div>
+                <small>SECURITY SCORE</small>
+                <strong id="kpi-rating-badge">82 GOOD</strong>
+              </div>
+              <span class="kpi-sub" id="kpi-protection-sub">Protected</span>
+            </div>
+          </div>
+
+          <!-- Quick Tip of the Day Banner -->
+          <div class="tip-banner card">
+            <div class="tip-badge">💡 SECURITY TIP OF THE DAY</div>
+            <div class="tip-content">
+              <strong id="tip-title">Disable WPS for Immediate Hardening</strong>
+              <p id="tip-body">Wi-Fi Protected Setup (WPS) PINs can be cracked in hours via automated brute-force tools.
+                Turn off WPS in your router's wireless settings to eliminate this critical vulnerability.</p>
+            </div>
+            <button class="secondary-button" data-screen="knowledge" style="padding:6px 14px;font-size:11px">Learn more
+              →</button>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="stats-grid">
+            <article class="score-card card">
+              <div class="card-heading">
+                <div>
+                  <p class="eyebrow">SECURITY SCORE</p>
+                  <h2>Network health</h2>
+                </div><span class="status-chip good">GOOD</span>
+              </div>
+              <div class="score-content">
+                <div class="score-ring">
+                  <div><strong id="score">82</strong><small>/100</small></div>
+                </div>
+                <div class="score-copy">
+                  <strong id="score-headline">You're protected</strong>
+                  <p id="score-explanation">Strong encryption and a secure router configuration keep your network safe.
+                  </p>
+                  <a href="#" data-screen="scan">View full scan breakdown →</a>
+                </div>
+              </div>
+              <div class="score-bar"><span></span></div>
+              <div class="score-foot">
+                <span id="score-classification-text">Classification: Good</span>
+                <span id="score-trend-text">+8 this month</span>
+              </div>
+            </article>
+
+            <!-- Connected Network Metric Card with Password Display -->
+            <article class="card metric-card">
+              <div class="card-heading">
+                <div>
+                  <p class="eyebrow">CONNECTED NETWORK</p>
+                  <h2 id="network-name-desktop"><span class="connected-dot"></span> Connected to Home_WiFi</h2>
+                </div>
+                <button class="icon-button detect-btn" id="detect-wifi-btn"
+                  title="Recognize live connected Wi-Fi">↻</button>
+              </div>
+              <div class="metric-value">5 GHz · Channel 36</div>
+              <div class="signal-line"><span style="width:88%"></span></div>
+              <div class="metric-foot">
+                <span>Signal strength</span>
+                <strong>-48 dBm <i>Excellent</i></strong>
+              </div>
+
+              <!-- User Request: Show Connected Wi-Fi Password -->
+              <div class="wifi-password-badge desktop-pass-badge" id="wifi-password-badge-desktop">
+                <div class="pass-info-wrap">
+                  <span class="key-icon">🔑</span>
+                  <div class="pass-texts">
+                    <small>CONNECTED WI-FI PASSWORD</small>
+                    <span class="password-val" id="wifi-pass-val-desktop">••••••••</span>
+                  </div>
+                </div>
+                <div class="pass-btn-group">
+                  <button type="button" class="pass-toggle-btn" id="toggle-pass-desktop" title="Show / Hide Password">👁
+                    Show</button>
+                  <button type="button" class="pass-copy-btn" id="copy-pass-desktop"
+                    title="Copy Password to Clipboard">⧉ Copy</button>
+                  <button type="button" class="pass-copy-btn" id="btn-quick-qr-desktop" title="Show Wi-Fi QR Code">📱 QR
+                    Code</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="card metric-card">
+              <div class="card-heading">
+                <div>
+                  <p class="eyebrow">CONNECTED DEVICES</p>
+                  <h2 id="device-count">3 devices</h2>
+                  <small class="device-network-sub">Connected to Home_WiFi</small>
+                </div>
+                <span class="device-icon">▣</span>
+              </div>
+              <div class="device-list">
+                <span class="device-dot phone"></span>
+                <span class="device-name-wrap"><strong>Android Phone</strong><small class="device-wifi-sub">Connected to
+                    Home_WiFi</small></span>
+                <b>192.168.1.10</b>
+                <span class="device-dot laptop"></span>
+                <span class="device-name-wrap"><strong>Laptop</strong><small class="device-wifi-sub">Connected to
+                    Home_WiFi</small></span>
+                <b>192.168.1.12</b>
+                <span class="device-dot tv"></span>
+                <span class="device-name-wrap"><strong>Smart TV</strong><small class="device-wifi-sub">Connected to
+                    Home_WiFi</small></span>
+                <b>192.168.1.15</b>
+              </div>
+              <a class="card-link" href="#" data-screen="devices">Manage devices &amp; allowlist →</a>
+            </article>
+          </div>
+
+          <div class="content-grid">
+            <article class="card panel">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">SECURITY ACTIVITY</p>
+                  <h2>Protection overview</h2>
+                </div>
+                <button class="text-button" id="btn-chart-range">Last 7 days⌄</button>
+              </div>
+              <div class="chart">
+                <div class="chart-y"><span>100</span><span>75</span><span>50</span><span>25</span><span>0</span></div>
+                <div class="chart-body">
+                  <div class="grid-lines"></div>
+                  <svg viewBox="0 0 600 180" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0" stop-color="#28e8c1" stop-opacity=".3" />
+                        <stop offset="1" stop-color="#28e8c1" stop-opacity="0" />
+                      </linearGradient>
+                    </defs>
+                    <path
+                      d="M0 115 C35 106 42 90 74 98 S125 128 155 105 S205 42 235 72 S276 115 308 90 S354 45 380 68 S425 108 455 82 S510 45 540 61 S570 52 600 35 V180 H0Z"
+                      fill="url(#chartFill)" />
+                    <path
+                      d="M0 115 C35 106 42 90 74 98 S125 128 155 105 S205 42 235 72 S276 115 308 90 S354 45 380 68 S425 108 455 82 S510 45 540 61 S570 52 600 35"
+                      fill="none" stroke="#36d9d2" stroke-width="3" />
+                  </svg>
+                  <div class="chart-labels"><span>Sep 28</span><span>Sep 30</span><span>Oct 02</span><span>Oct 04</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- AI-Based Security Recommendations Panel -->
+            <article class="card panel recommendations" id="ai-recommendations-panel">
+              <div class="panel-title">
+                <div>
+                  <p class="eyebrow">AI SECURITY ENGINE</p>
+                  <h2>AI Recommendations</h2>
+                </div><span class="count" id="ai-rec-count">5</span>
+              </div>
+              <p class="ai-summary-text" id="ai-executive-summary">
+                Analyzing your Wi-Fi environment for vulnerabilities, rogue APs, and weak encryption protocols...
+              </p>
+              <div id="ai-recommendations-list">
+                <div class="recommendation">
+                  <span class="rec-icon green">✓</span>
+                  <div>
+                    <strong>Disable WPS (Wi-Fi Protected Setup)</strong>
+                    <p>WPS PIN brute-forcing tools can recover your WPA2 password within hours.</p>
+                  </div>
+                  <button class="ai-fix-btn" data-screen="knowledge">→</button>
+                </div>
+                <div class="recommendation">
+                  <span class="rec-icon yellow">!</span>
+                  <div>
+                    <strong>Enforce WPA2-AES / WPA3 Only</strong>
+                    <p>Disable deprecated WPA and TKIP ciphers to prevent packet injection attacks.</p>
+                  </div>
+                  <button class="ai-fix-btn" data-screen="knowledge">→</button>
+                </div>
+                <div class="recommendation">
+                  <span class="rec-icon purple">⌁</span>
+                  <div>
+                    <strong>Isolate Smart IoT Gadgets</strong>
+                    <p>Create a dedicated guest SSID for Smart TVs and IoT smart home devices.</p>
+                  </div>
+                  <button class="ai-fix-btn" data-screen="knowledge">→</button>
+                </div>
+              </div>
+              <a class="card-link" href="#" data-screen="ai-chat">Open AI Cybersecurity Assistant →</a>
+            </article>
+          </div>
+
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">RECENT SCANS</p>
+              <h2>Scan history</h2>
+            </div><a href="#" data-screen="history">View all →</a>
+          </div>
+          <div class="history-row">
+            <div class="history-item card"><span class="history-icon blue">⌁</span>
+              <div><strong>Home_WiFi</strong><small>Today, 12:05 PM · WPA2-Personal</small></div><span
+                class="status-chip good">82 GOOD</span>
+            </div>
+            <div class="history-item card"><span class="history-icon purple">⌁</span>
+              <div><strong>Cafe_WiFi</strong><small>Sep 21, 11:30 AM · Open network</small></div><span
+                class="status-chip danger">42 RISKY</span>
+            </div>
+            <div class="history-item card"><span class="history-icon green">⌁</span>
+              <div><strong>Office_5G</strong><small>Sep 15, 04:20 PM · WPA3</small></div><span
+                class="status-chip good">78 GOOD</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. ADVANCED WI-FI SCANNER SCREEN -->
+      <section class="screen" id="scan-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">ADVANCED WI-FI NETWORK SCANNER</p>
+            <h1>Nearby Wi-Fi Networks</h1>
+            <p class="muted">Detect broadcast beacon frames, BSSIDs, frequencies, and analyze security posture.</p>
+          </div>
+          <div class="heading-actions">
+            <!-- Periodic Auto-Scan Dropdown -->
+            <div class="auto-scan-wrap">
+              <label for="auto-scan-interval-select" class="auto-scan-label">Auto-Scan:</label>
+              <select id="auto-scan-interval-select" class="select filter-dropdown">
+                <option value="0">Off (Manual)</option>
+                <option value="15">Every 15s</option>
+                <option value="30" selected>Every 30s</option>
+                <option value="60">Every 60s</option>
+              </select>
+            </div>
+            <button class="secondary-button" id="btn-export-csv-scan"><span>📊</span> Export CSV</button>
+            <button class="secondary-button" id="btn-export-pdf-scan"><span>📄</span> Export PDF</button>
+            <button class="secondary-button" id="btn-compare-selected"><span>⇋</span> Compare (<span
+                id="compare-count-badge">0</span>)</button>
+            <button class="primary-button" id="refresh-wifi"><span aria-hidden="true">↻</span> Scan Airspace</button>
+          </div>
+        </div>
+
+        <div class="wifi-source-note">Scans 802.11 access points broadcasting to your physical wireless interface.
+          Analysis evaluates BSSID, cipher suites, authentication frames, and rogue cloning.</div>
+
+        <!-- Filter and Search Toolbar -->
+        <div class="scanner-filter-bar card">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="wifi-search-input" placeholder="Search by SSID name or BSSID MAC address..."
+              aria-label="Search networks" />
+          </div>
+          <div class="filter-controls">
+            <select id="filter-band-select" class="select filter-dropdown" aria-label="Filter by frequency band">
+              <option value="all">All Frequencies (2.4/5/6 GHz)</option>
+              <option value="2.4 GHz">2.4 GHz</option>
+              <option value="5 GHz">5 GHz</option>
+              <option value="6 GHz">6 GHz</option>
+            </select>
+            <select id="filter-security-select" class="select filter-dropdown" aria-label="Filter by security">
+              <option value="all">All Encryption Protocols</option>
+              <option value="wpa3">WPA3 (Next-Gen SAE)</option>
+              <option value="wpa2">WPA2 (Standard AES)</option>
+              <option value="open">Open / Unsecured</option>
+              <option value="wep">Legacy / Insecure (WEP)</option>
+            </select>
+            <div class="view-toggle-group">
+              <button type="button" class="view-toggle-btn active" id="view-mode-table" title="Table View">☰
+                Table</button>
+              <button type="button" class="view-toggle-btn" id="view-mode-cards" title="Cards View">☷ Cards</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="wifi-toolbar">
+          <div>
+            <p class="eyebrow">AIRSPACE SCAN RESULTS</p>
+            <strong id="wifi-network-count">Ready to scan</strong>
+            <small id="wifi-scan-time"></small>
+          </div>
+          <div id="selection-counter" class="selection-counter" hidden>0 networks selected for comparison</div>
+        </div>
+        <p id="wifi-status" class="wifi-status" role="status" aria-live="polite">Starting WiFi scan…</p>
+
+        <!-- Organized Table View -->
+        <div id="wifi-table-container" class="card table-card wifi-table-wrapper">
+          <table class="advanced-wifi-table" id="advanced-wifi-table">
+            <thead>
+              <tr>
+                <th width="40"><input type="checkbox" id="select-all-wifi" title="Select All" /></th>
+                <th class="sortable-th" data-sort="ssid">SSID Name ▾</th>
+                <th>BSSID (MAC)</th>
+                <th class="sortable-th" data-sort="band">Band / Freq ▾</th>
+                <th class="sortable-th" data-sort="channel">Channel ▾</th>
+                <th class="sortable-th" data-sort="signal">Signal Strength ▾</th>
+                <th>Signal Quality</th>
+                <th>Encryption Protocol</th>
+                <th>Vendor</th>
+                <th class="sortable-th" data-sort="score">Score ▾</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="wifi-table-body">
+              <tr>
+                <td colspan="11" class="muted table-loading">Scanning live Wi-Fi networks...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cards View & Analysis Layout -->
+        <div class="wifi-content-grid" id="wifi-cards-container" hidden>
+          <section id="wifi-networks" class="wifi-network-list" aria-label="Available WiFi networks"></section>
+
+          <article id="wifi-analysis" class="card wifi-analysis" hidden>
+            <div class="wifi-analysis-heading">
+              <div>
+                <p class="eyebrow">SECURITY REPORT</p>
+                <h2 id="analysis-ssid"></h2>
+                <p id="analysis-auth" class="muted"></p>
+                <small id="analysis-bssid-text" class="analysis-bssid"></small>
+              </div>
+              <span id="analysis-badge" class="status-chip"></span>
+            </div>
+            <div class="wifi-score-layout">
+              <div id="analysis-ring" class="wifi-score-ring">
+                <div><strong id="analysis-score"></strong><small>/ 100</small></div>
+              </div>
+              <div>
+                <p class="eyebrow">ADVERTISED SECURITY</p>
+                <h3 id="analysis-rating"></h3>
+                <p id="analysis-summary" class="muted"></p>
+              </div>
+            </div>
+
+            <div class="wifi-score-factors-box">
+              <p class="eyebrow">SECURITY SCORE FACTORS</p>
+              <ul id="analysis-score-factors" class="score-factors-list"></ul>
+            </div>
+
+            <div class="wifi-analysis-facts" id="analysis-facts"></div>
+            <div class="wifi-recommendations">
+              <p class="eyebrow">REMEDIATION RECOMMENDATIONS</p>
+              <ul id="analysis-recommendations"></ul>
+            </div>
+            <p id="analysis-scope" class="wifi-source-note"></p>
+            <div class="analysis-action-row">
+              <button class="secondary-button" id="btn-print-single-analysis"><span>📄</span> Export Single
+                Report</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 3. CONNECTED DEVICES MONITORING SCREEN -->
+      <section class="screen" id="devices-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">AUTHORIZED NETWORK MONITORING &amp; ALLOWLIST</p>
+            <h1>Connected Devices</h1>
+            <p class="muted">Live inventory of authorized hosts, gateway, and devices on your local subnet.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="refresh-devices-btn"><span>↻</span> Refresh Subnet</button>
+          </div>
+        </div>
+
+        <div class="device-summary-cards">
+          <div class="device-summary-stat card">
+            <span class="device-sum-icon green">✓</span>
+            <div class="device-sum-info">
+              <small>ONLINE DEVICES</small>
+              <strong id="dev-stat-online">3 Active</strong>
+            </div>
+          </div>
+          <div class="device-summary-stat card">
+            <span class="device-sum-icon blue">💻</span>
+            <div class="device-sum-info">
+              <small>HOST MACHINE</small>
+              <strong id="dev-stat-host">Active Host</strong>
+            </div>
+          </div>
+          <div class="device-summary-stat card">
+            <span class="device-sum-icon purple">📡</span>
+            <div class="device-sum-info">
+              <small>GATEWAY ROUTER</small>
+              <strong id="dev-stat-gateway">192.168.1.1</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="device-cards">
+          <!-- Populated dynamically via renderDevices() -->
+        </div>
+      </section>
+
+      <!-- 4. ADVANCED THREAT DETECTION SCREEN -->
+      <section class="screen" id="threats-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">AIRSPACE THREAT DEFENSE</p>
+            <h1>Advanced Threat Detection</h1>
+            <p class="muted">Detect Evil Twin access points, duplicate SSIDs, rogue APs, and insecure beacons.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="refresh-threats-btn"><span>↻</span> Re-Scan Threats</button>
+          </div>
+        </div>
+
+        <div class="threat-overview-grid">
+          <div class="card threat-stat-box">
+            <p class="eyebrow">THREAT STATUS</p>
+            <h2 id="threat-stat-headline">Airspace Monitored</h2>
+            <p class="muted" id="threat-stat-sub">Continuously analyzing 802.11 beacon frames for spoofing and
+              credential theft.</p>
+          </div>
+          <div class="card threat-stat-box">
+            <p class="eyebrow">ACTIVE ROGUE DETECTIONS</p>
+            <h2 id="threat-total-badge" class="threat-counter-number">0</h2>
+            <span class="status-chip good" id="threat-health-chip">PROTECTED</span>
+          </div>
+        </div>
+
+        <div class="threat-section-title">
+          <h3>Detected Threat Findings</h3>
+          <span class="threat-legend">
+            <span class="legend-dot critical"></span> Confirmed Threat
+            <span class="legend-dot warning"></span> Potential Risk
+          </span>
+        </div>
+
+        <div id="threat-list-container" class="threat-list">
+          <!-- Populated dynamically via renderThreats() -->
+        </div>
+
+        <article class="card threat-guidance-card">
+          <div class="card-heading">
+            <div>
+              <p class="eyebrow">CYBERSECURITY PROTOCOL</p>
+              <h2>What is an Evil Twin Access Point?</h2>
+            </div>
+          </div>
+          <p class="muted">An <strong>Evil Twin</strong> is a fraudulent Wi-Fi access point that masquerades as a
+            legitimate network by broadcasting the identical SSID. Attackers configure these rogue APs near target users
+            with higher transmission power or open authentication to trick devices into connecting, allowing the
+            attacker to harvest credentials, inject malicious payloads, or execute Man-in-the-Middle (MITM) packet
+            inspection.</p>
+        </article>
+      </section>
+
+      <!-- 5. NETWORK PERFORMANCE ANALYSIS SCREEN (NEW) -->
+      <section class="screen" id="performance-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">LATENCY, JITTER &amp; CONNECTION STABILITY</p>
+            <h1>Network Performance Monitoring</h1>
+            <p class="muted">Measured round-trip latency, jitter variance, packet loss, and connection health rating.
+            </p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-test-performance"><span>⚡</span> Run Performance Test</button>
+          </div>
+        </div>
+
+        <!-- Performance KPI Grid -->
+        <div class="traffic-speed-grid">
+          <div class="card speed-card">
+            <div class="speed-head">
+              <span class="speed-icon" style="background:#133c6d;color:#4ea1ff">⏱</span>
+              <div><small>AVERAGE LATENCY</small>
+                <h2 id="perf-latency-val">24 ms</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Min / Max: <strong id="perf-latency-range">15 ms / 34 ms</strong></div>
+          </div>
+          <div class="card speed-card">
+            <div class="speed-head">
+              <span class="speed-icon" style="background:#3b245e;color:#b485ff">〰</span>
+              <div><small>JITTER VARIANCE</small>
+                <h2 id="perf-jitter-val">19 ms</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Packet Loss: <strong id="perf-loss-val">0%</strong></div>
+          </div>
+          <div class="card speed-card">
+            <div class="speed-head">
+              <span class="speed-icon" style="background:#0c4a3b;color:#39e8ad">★</span>
+              <div><small>CONNECTION SCORE</small>
+                <h2 id="perf-score-val">95 / 100</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Status: <strong id="perf-status-val">Excellent Quality</strong></div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <article class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">TELEMETRY SCOPE</p>
+                <h2>Internet vs Local Wi-Fi Metrics</h2>
+              </div>
+              <span class="status-chip good" id="perf-internet-chip">INTERNET AVAILABLE</span>
+            </div>
+            <p class="muted" style="margin-top:10px;font-size:12px;line-height:1.6">
+              NetGuard distinguishes between physical Wi-Fi radio strength (measured via 802.11 dBm signal frames from
+              your access point) and WAN internet performance (measured via ICMP round-trip packets to DNS gateways).
+            </p>
+            <div class="perf-metric-bars">
+              <div class="perf-bar-row">
+                <span>Local Wi-Fi Signal (-48 dBm)</span>
+                <div class="progress-track"><span style="width:92%;background:var(--cyan)"></span></div>
+                <b>92% Excellent</b>
+              </div>
+              <div class="perf-bar-row">
+                <span>DNS Round-Trip Time (24 ms)</span>
+                <div class="progress-track"><span style="width:85%;background:var(--green)"></span></div>
+                <b>85% Optimal</b>
+              </div>
+              <div class="perf-bar-row">
+                <span>Packet Reliability (0% loss)</span>
+                <div class="progress-track"><span style="width:100%;background:var(--green)"></span></div>
+                <b>100% Solid</b>
+              </div>
+            </div>
+          </article>
+
+          <!-- ML Anomaly Detection Card -->
+          <article class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">MACHINE LEARNING</p>
+                <h2>Spectral Anomaly Detector</h2>
+              </div>
+              <button class="text-button" id="btn-refresh-ml">Re-evaluate</button>
+            </div>
+            <div id="ml-anomaly-box" class="ml-box">
+              <div class="ml-stat-row">
+                <span class="muted">Algorithm:</span> <strong>Statistical Z-Score / Isolation Model</strong>
+              </div>
+              <div class="ml-stat-row">
+                <span class="muted">Anomaly Probability:</span> <strong id="ml-prob-val">0.05 (Low)</strong>
+              </div>
+              <div class="ml-stat-row">
+                <span class="muted">Status:</span> <span class="status-chip good" id="ml-status-chip">NORMAL
+                  SPECTRUM</span>
+              </div>
+              <ul id="ml-anomaly-items" class="ml-anomaly-list">
+                <li>Zero extreme proximity beacon power spikes detected.</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- 6. NETWORK TRAFFIC MONITORING SCREEN -->
+      <section class="screen" id="traffic-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">REAL-TIME TELEMETRY</p>
+            <h1>Network Traffic Monitor</h1>
+            <p class="muted">Authorized live bandwidth consumption, packet throughput, and traffic anomaly detection.
+            </p>
+          </div>
+          <div class="heading-actions">
+            <span class="live-pulse-badge"><span class="pulse-dot"></span> Live Telemetry</span>
+          </div>
+        </div>
+
+        <div class="traffic-speed-grid">
+          <div class="card speed-card rx-card">
+            <div class="speed-head">
+              <span class="speed-icon">↓</span>
+              <div><small>DOWNLOAD SPEED</small>
+                <h2 id="traffic-rx-speed">0.0 KB/s</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Total Received: <strong id="traffic-rx-total">0 B</strong></div>
+          </div>
+          <div class="card speed-card tx-card">
+            <div class="speed-head">
+              <span class="speed-icon">↑</span>
+              <div><small>UPLOAD SPEED</small>
+                <h2 id="traffic-tx-speed">0.0 KB/s</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Total Transmitted: <strong id="traffic-tx-total">0 B</strong></div>
+          </div>
+          <div class="card speed-card packet-card">
+            <div class="speed-head">
+              <span class="speed-icon">📦</span>
+              <div><small>UNICAST PACKETS</small>
+                <h2 id="traffic-packets-total">0</h2>
+              </div>
+            </div>
+            <div class="speed-meta">Errors / Discards: <strong id="traffic-errors-total">0 / 0</strong></div>
+          </div>
+        </div>
+
+        <article class="card panel traffic-chart-panel">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">THROUGHPUT GRAPH</p>
+              <h2>Real-Time Bandwidth Activity (KB/s)</h2>
+            </div>
+            <div class="chart-legend-wrap">
+              <span class="chart-legend-item rx"><i class="dot-rx"></i> Download</span>
+              <span class="chart-legend-item tx"><i class="dot-tx"></i> Upload</span>
+            </div>
+          </div>
+          <div class="live-chart-wrapper">
+            <svg id="live-traffic-svg" viewBox="0 0 600 180" preserveAspectRatio="none">
+              <line x1="0" y1="45" x2="600" y2="45" stroke="#1c3a63" stroke-dasharray="4" />
+              <line x1="0" y1="90" x2="600" y2="90" stroke="#1c3a63" stroke-dasharray="4" />
+              <line x1="0" y1="135" x2="600" y2="135" stroke="#1c3a63" stroke-dasharray="4" />
+              <path id="svg-rx-path" d="M0 160 L600 160" fill="none" stroke="#36d9d2" stroke-width="2.5" />
+              <path id="svg-tx-path" d="M0 160 L600 160" fill="none" stroke="#9b62ff" stroke-width="2.5" />
+            </svg>
+          </div>
+        </article>
+
+        <article class="card anomaly-detection-card" id="traffic-anomaly-card">
+          <div class="anomaly-head">
+            <span class="anomaly-icon green" id="anomaly-icon">✓</span>
+            <div>
+              <strong id="anomaly-title">Traffic Patterns Normal</strong>
+              <p id="anomaly-desc">No abnormal exfiltration bursts, ARP spoofing, or packet drop spikes observed.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- 7. WI-FI NETWORK COMPARISON SCREEN -->
+      <section class="screen" id="compare-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">AIRSPACE BENCHMARK</p>
+            <h1>Wi-Fi Network Comparison</h1>
+            <p class="muted">Side-by-side comparative analysis of encryption ciphers, frequencies, signal, and security
+              scores.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="refresh-compare-btn"><span>↻</span> Refresh Comparison</button>
+          </div>
+        </div>
+
+        <div class="card comparison-table-card">
+          <div class="comparison-scroll-container" id="comparison-matrix-container">
+            <p class="muted" style="padding:24px">Select networks from the Security Scan screen or wait for visible scan
+              results...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. REAL-TIME SECURITY ALERTS SCREEN -->
+      <section class="screen" id="alerts-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">INCIDENT RESPONSE</p>
+            <h1>Security Alert Center</h1>
+            <p class="muted">Historical audit trail of security warnings, rogue AP detections, and network status
+              changes.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="btn-clear-alerts"><span>✓</span> Mark All Read</button>
+          </div>
+        </div>
+
+        <div class="alert-filter-tabs">
+          <button class="alert-tab-btn active" data-severity="all">All Alerts</button>
+          <button class="alert-tab-btn" data-severity="CRITICAL">Critical</button>
+          <button class="alert-tab-btn" data-severity="HIGH">High</button>
+          <button class="alert-tab-btn" data-severity="MEDIUM">Medium</button>
+          <button class="alert-tab-btn" data-severity="LOW">Low</button>
+        </div>
+
+        <div id="alerts-list-container" class="alerts-feed"></div>
+      </section>
+
+      <!-- 9. AI CYBERSECURITY ASSISTANT CHAT SCREEN (NEW) -->
+      <section class="screen" id="ai-chat-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">NATURAL LANGUAGE INTELLIGENCE</p>
+            <h1>AI Security Assistant</h1>
+            <p class="muted">Ask questions about your Wi-Fi scan results, router vulnerabilities, and defense
+              strategies.</p>
+          </div>
+          <div class="heading-actions">
+            <span class="live-pulse-badge"><span class="pulse-dot"></span> AI Engine Online</span>
+          </div>
+        </div>
+
+        <div class="ai-chat-layout card">
+          <div class="ai-chat-header">
+            <div class="ai-avatar">✦</div>
+            <div style="flex:1">
+              <strong>NetGuard Cyber AI</strong>
+              <small class="muted" id="ai-chat-context-sub">Active Context: Connected Network Audit</small>
+            </div>
+            <button type="button" class="secondary-button" id="btn-clear-ai-chat"
+              style="padding:4px 10px;font-size:11px" title="Clear chat history">↻ Clear</button>
+          </div>
+
+          <!-- Quick Suggested Question Pills -->
+          <div class="ai-suggested-pills" id="ai-quick-pills">
+            <button type="button" class="ai-pill-btn">Is my Wi-Fi network secure?</button>
+            <button type="button" class="ai-pill-btn">Why is my network marked as risky?</button>
+            <button type="button" class="ai-pill-btn">What does WPA3 mean?</button>
+            <button type="button" class="ai-pill-btn">How can I improve my router security?</button>
+            <button type="button" class="ai-pill-btn">Why am I receiving an Evil Twin warning?</button>
+          </div>
+
+          <!-- Chat Message Feed -->
+          <div class="ai-chat-messages" id="ai-chat-messages-container">
+            <div class="ai-msg bot">
+              <div class="msg-bubble">
+                Hello! I am your <strong>NetGuard AI Security Assistant</strong>. I have analyzed your active wireless
+                environment and nearby airspace. Ask me anything about your security score, rogue AP threats, or router
+                configuration!
+              </div>
+              <small class="msg-time">Just now</small>
+            </div>
+          </div>
+
+          <!-- Chat Input -->
+          <form class="ai-chat-input-bar" id="ai-chat-form">
+            <input type="text" id="ai-chat-input" placeholder="Ask a security question (e.g. Is my network secure?)..."
+              required autocomplete="off" />
+            <button type="submit" class="primary-button" id="ai-send-btn">Send ➔</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 10. KNOWLEDGE CENTER & AUDIT CHECKLIST SCREEN (NEW) -->
+      <section class="screen" id="knowledge-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">STANDARDS &amp; BEST PRACTICES</p>
+            <h1>Knowledge Center &amp; Security Audit</h1>
+            <p class="muted">Wi-Fi security reference library, router hardening checklist, and QR code sharing.</p>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <!-- Security Improvement Checklist -->
+          <article class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">HARDENING AUDIT</p>
+                <h2>Router Security Checklist</h2>
+              </div>
+              <span class="count" id="checklist-progress-count">4 / 5</span>
+            </div>
+            <div id="checklist-container" class="checklist-items">
+              <!-- Dynamically populated via loadChecklist() -->
+            </div>
+          </article>
+
+          <!-- QR Code Wi-Fi Sharing -->
+          <article class="card panel" id="qr-panel-card">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">SECURE SHARING</p>
+                <h2>Wi-Fi Quick Connect QR</h2>
+              </div>
+              <span class="status-chip good">LOCAL QR</span>
+            </div>
+            <p class="muted" style="font-size:11px;margin:8px 0 14px">
+              Scan with an authorized mobile phone to quickly connect or verify network credentials without exposing
+              keys.
+            </p>
+            <div class="qr-canvas-wrap">
+              <canvas id="qr-code-canvas" width="160" height="160"></canvas>
+            </div>
+            <div class="qr-meta-wrap">
+              <strong id="qr-net-name">Home_WiFi</strong>
+              <small class="muted" id="qr-net-type">WPA2 Protected</small>
+            </div>
+            <div style="display:flex;justify-content:center;gap:8px;margin-top:14px">
+              <button type="button" class="secondary-button" id="btn-save-qr" style="padding:6px 14px;font-size:11px">💾
+                Save QR Image</button>
+              <button type="button" class="secondary-button" id="btn-refresh-qr"
+                style="padding:6px 14px;font-size:11px">↻ Refresh QR</button>
+            </div>
+          </article>
+        </div>
+
+        <!-- Knowledge Base Articles -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">CYBERSECURITY REFERENCE LIBRARY</p>
+            <h2>Educational Knowledge Base</h2>
+          </div>
+        </div>
+        <div class="knowledge-articles-grid" id="knowledge-articles-container">
+          <!-- Populated dynamically via loadKnowledge() -->
+        </div>
+      </section>
+
+      <!-- 11. SCAN HISTORY SCREEN -->
+      <section class="screen" id="history-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">ACTIVITY &amp; AUDIT TRAIL</p>
+            <h1>Scan History</h1>
+            <p class="muted">Review previous network security reports and historical vulnerability ratings.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button danger-btn" id="btn-clear-history"
+              title="Clear all saved scan history"><span>🗑️</span> Clear History</button>
+            <button class="secondary-button" id="btn-export-csv-history"><span>📊</span> CSV Export</button>
+            <button class="secondary-button" id="btn-export-pdf-history"><span>📄</span> PDF History</button>
+          </div>
+        </div>
+        <div class="card table-card history-table-wrapper" id="history-table-container"></div>
+      </section>
+
+      <!-- 12. FIREWALL DETECTION & ATTACK SURFACE SCREEN -->
+      <section class="screen" id="firewall-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">SYSTEM &amp; PERIMETER DEFENSE</p>
+            <h1>Firewall &amp; Attack Surface Inspector</h1>
+            <p class="muted">Live status of Windows Defender Firewall profiles, inbound packet filtering, and exposed listening ports.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-rescan-firewall"><span>↻</span> Re-Scan Firewall</button>
+          </div>
+        </div>
+
+        <!-- Firewall Health Banner -->
+        <div class="firewall-overview-grid">
+          <div class="card firewall-overview-card">
+            <div class="firewall-badge-wrap">
+              <span class="firewall-shield-big">🛡️</span>
+              <div>
+                <p class="eyebrow">FIREWALL DEFENSE POSTURE</p>
+                <h2 id="fw-defense-headline">3 / 3 Profiles Active</h2>
+                <small class="muted" id="fw-engine-sub">Engine: Windows Defender Advanced Firewall (netsh advfirewall)</small>
+              </div>
+            </div>
+            <div class="firewall-score-pill" id="fw-score-pill">
+              <strong id="fw-score-val">100 / 100</strong>
+              <span id="fw-rating-val">OPTIMAL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Profile Cards (Domain, Private, Public) -->
+        <div class="firewall-profiles-grid">
+          <!-- Domain Profile -->
+          <div class="card firewall-profile-card" id="fw-card-domain">
+            <div class="fw-card-head">
+              <span class="fw-prof-icon blue">🏢</span>
+              <div class="fw-prof-titles">
+                <small>ENTERPRISE PROFILE</small>
+                <h3>Domain Network</h3>
+              </div>
+              <span class="status-chip good" id="fw-domain-chip">ACTIVE · ON</span>
+            </div>
+            <div class="fw-rules-list">
+              <div class="fw-rule-row">
+                <span>Inbound Traffic:</span>
+                <strong id="fw-domain-inbound">Block (Default)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Outbound Traffic:</span>
+                <strong id="fw-domain-outbound">Allow (Unrestricted)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Notifications:</span>
+                <strong id="fw-domain-notify">Enabled</strong>
+              </div>
+            </div>
+            <div class="fw-card-foot">
+              <span class="fw-foot-dot green"></span>
+              <small id="fw-domain-status-note">Active on Active Directory domain controllers.</small>
+            </div>
+          </div>
+
+          <!-- Private Profile -->
+          <div class="card firewall-profile-card" id="fw-card-private">
+            <div class="fw-card-head">
+              <span class="fw-prof-icon green">🏠</span>
+              <div class="fw-prof-titles">
+                <small>TRUSTED NETWORK PROFILE</small>
+                <h3>Private Network</h3>
+              </div>
+              <span class="status-chip good" id="fw-private-chip">ACTIVE · ON</span>
+            </div>
+            <div class="fw-rules-list">
+              <div class="fw-rule-row">
+                <span>Inbound Traffic:</span>
+                <strong id="fw-private-inbound">Block (Default)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Outbound Traffic:</span>
+                <strong id="fw-private-outbound">Allow (Unrestricted)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Notifications:</span>
+                <strong id="fw-private-notify">Enabled</strong>
+              </div>
+            </div>
+            <div class="fw-card-foot">
+              <span class="fw-foot-dot green"></span>
+              <small id="fw-private-status-note">Protects home and work authorized Wi-Fi.</small>
+            </div>
+          </div>
+
+          <!-- Public Profile -->
+          <div class="card firewall-profile-card" id="fw-card-public">
+            <div class="fw-card-head">
+              <span class="fw-prof-icon purple">🌐</span>
+              <div class="fw-prof-titles">
+                <small>UNTRUSTED HOTSPOT PROFILE</small>
+                <h3>Public Network</h3>
+              </div>
+              <span class="status-chip good" id="fw-public-chip">ACTIVE · ON</span>
+            </div>
+            <div class="fw-rules-list">
+              <div class="fw-rule-row">
+                <span>Inbound Traffic:</span>
+                <strong id="fw-public-inbound">Block (Strict Stealth)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Outbound Traffic:</span>
+                <strong id="fw-public-outbound">Allow (Unrestricted)</strong>
+              </div>
+              <div class="fw-rule-row">
+                <span>Notifications:</span>
+                <strong id="fw-public-notify">Enabled</strong>
+              </div>
+            </div>
+            <div class="fw-card-foot">
+              <span class="fw-foot-dot green"></span>
+              <small id="fw-public-status-note">Max stealth mode on public coffee shop / airport Wi-Fi.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attack Surface / Listening TCP Endpoints Table -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">LOCAL HOST ATTACK SURFACE</p>
+            <h2>Active Listening TCP Ports &amp; Services</h2>
+          </div>
+          <span class="selection-counter" id="fw-ports-count-badge">Listening Endpoints</span>
+        </div>
+
+        <div class="card table-card firewall-ports-wrapper">
+          <table class="advanced-wifi-table" id="fw-ports-table">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Local Address &amp; Port</th>
+                <th>Identified Service</th>
+                <th>Network Exposure</th>
+                <th>Risk Rating</th>
+                <th>Firewall Filter Status</th>
+              </tr>
+            </thead>
+            <tbody id="fw-ports-tbody">
+              <!-- Populated dynamically via renderFirewall() -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Active Connections & Socket Telemetry -->
+        <div class="section-title" style="margin-top:24px">
+          <div>
+            <p class="eyebrow">LIVE SOCKET TELEMETRY</p>
+            <h2>Active Inbound &amp; Outbound Connections</h2>
+          </div>
+          <span class="selection-counter" id="fw-conn-count-badge">Monitoring Live Sockets</span>
+        </div>
+
+        <div class="card table-card firewall-ports-wrapper">
+          <table class="advanced-wifi-table" id="fw-connections-table">
+            <thead>
+              <tr>
+                <th>Direction</th>
+                <th>Process (Application)</th>
+                <th>PID</th>
+                <th>Local Address : Port</th>
+                <th>Foreign Remote Address</th>
+                <th>State</th>
+                <th>Risk Evaluation</th>
+              </tr>
+            </thead>
+            <tbody id="fw-connections-tbody">
+              <tr><td colspan="7" class="muted table-loading">Inspecting live host socket connections...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Custom Firewall Rules Management -->
+        <div class="section-title" style="margin-top:28px">
+          <div>
+            <p class="eyebrow">FIREWALL ACCESS CONTROL LIST</p>
+            <h2>Custom Filtering Rules &amp; Policies</h2>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-open-create-rule-modal" style="padding:7px 14px;font-size:12px"><span>+</span> Add Custom Rule</button>
+          </div>
+        </div>
+
+        <div class="card table-card firewall-ports-wrapper">
+          <table class="advanced-wifi-table" id="fw-custom-rules-table">
+            <thead>
+              <tr>
+                <th>Rule Name</th>
+                <th>Direction</th>
+                <th>Action</th>
+                <th>Protocol</th>
+                <th>Port</th>
+                <th>Remote Target</th>
+                <th>Enforcement</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fw-custom-rules-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Firewall Hardening Findings -->
+        <article class="card panel" style="margin-top:20px">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">AUTOMATED FIREWALL AUDIT</p>
+              <h2>Security Audit Findings &amp; Hardening Guidance</h2>
+            </div>
+          </div>
+          <ul id="fw-findings-list" class="score-factors-list" style="margin-top:12px;font-size:12px;line-height:1.7">
+            <!-- Populated dynamically -->
+          </ul>
+        </article>
+      </section>
+
+      <!-- 6. VIRUS & MALWARE DETECTION SCREEN -->
+      <section class="screen" id="malware-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">ENDPOINT HYGIENE &amp; THREAT REMEDIATION</p>
+            <h1>Virus &amp; Malware Detection</h1>
+            <p class="muted">Cryptographic SHA-256 hash inspection, static heuristic behavior analysis, and Microsoft Defender real-time integration.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-run-malware-scan"><span>⚡</span> Start Malware Scan</button>
+          </div>
+        </div>
+
+        <!-- Defender Integration Banner -->
+        <div class="malware-defender-banner card">
+          <div class="defender-icon-wrap">
+            <span class="defender-shield-icon">🛡️</span>
+            <div>
+              <p class="eyebrow">ANTIVIRUS ENGINE STATUS</p>
+              <h2 id="defender-engine-name">Microsoft Defender Antivirus</h2>
+              <small class="muted" id="defender-sig-version">Signatures: Verifying live version...</small>
+            </div>
+          </div>
+          <div class="defender-chips">
+            <span class="status-chip good" id="defender-rtp-chip">REAL-TIME PROTECTION: ACTIVE</span>
+            <span class="status-chip good" id="defender-cloud-chip">CLOUD DEFENSE: ENABLED</span>
+          </div>
+        </div>
+
+        <!-- Scan Target Selector -->
+        <div class="card panel" style="margin-top:18px">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">SCAN PARAMETERS</p>
+              <h3>Target Path &amp; Heuristic Scope</h3>
+            </div>
+          </div>
+          <div class="malware-scan-bar" style="margin-top:12px">
+            <div class="search-input-wrap" style="flex:1">
+              <span class="search-icon">📁</span>
+              <input type="text" id="malware-target-input" value="." placeholder="Enter directory or file path to scan (e.g. . or C:\Users\...)" />
+            </div>
+            <button class="secondary-button" id="btn-scan-preset-project">Scan Project</button>
+            <button class="primary-button" id="btn-trigger-scan-path">Scan Target</button>
+          </div>
+          <small class="muted" style="display:block;margin-top:8px">Heuristic rules analyze file extensions, disguised payloads (.pdf.exe), and static script obfuscation without executing files.</small>
+        </div>
+
+        <!-- Scan Results Statistics -->
+        <div class="malware-stats-grid" id="malware-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:18px">
+          <div class="card kpi-card">
+            <span class="kpi-icon blue">📄</span>
+            <div>
+              <small>FILES INSPECTED</small>
+              <strong id="malware-scanned-count">0 Files</strong>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <span class="kpi-icon green">✓</span>
+            <div>
+              <small>CLEAN FILES</small>
+              <strong id="malware-clean-count">0 Clean</strong>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <span class="kpi-icon red">⚠</span>
+            <div>
+              <small>THREATS DETECTED</small>
+              <strong id="malware-threats-count">0 Threats</strong>
+            </div>
+          </div>
+          <div class="card kpi-card">
+            <span class="kpi-icon cyan">⏱</span>
+            <div>
+              <small>SCAN DURATION</small>
+              <strong id="malware-duration-val">0.00s</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detected Threats Table -->
+        <div class="section-title" style="margin-top:24px">
+          <div>
+            <p class="eyebrow">THREAT INVENTORY</p>
+            <h2>Identified Malware &amp; Heuristic Warnings</h2>
+          </div>
+          <span class="selection-counter" id="malware-threats-badge">0 Threats</span>
+        </div>
+
+        <div class="card table-card">
+          <table class="advanced-wifi-table" id="malware-threats-table">
+            <thead>
+              <tr>
+                <th>Threat Classification</th>
+                <th>Detection Type</th>
+                <th>File Name &amp; Path</th>
+                <th>SHA-256 Hash</th>
+                <th>Severity</th>
+                <th>Remediation Action</th>
+              </tr>
+            </thead>
+            <tbody id="malware-threats-tbody">
+              <tr><td colspan="6" class="muted table-loading">No active threats detected. Run a scan to inspect files.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Quarantine Management Section -->
+        <div class="section-title" style="margin-top:28px">
+          <div>
+            <p class="eyebrow">SAFE QUARANTINE VAULT</p>
+            <h2>Isolated Suspicious Files</h2>
+          </div>
+        </div>
+        <div class="card table-card">
+          <table class="advanced-wifi-table" id="malware-quarantine-table">
+            <thead>
+              <tr>
+                <th>Quarantine ID</th>
+                <th>Original File Path</th>
+                <th>Quarantined Storage</th>
+                <th>Isolation Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="malware-quarantine-tbody">
+              <tr><td colspan="6" class="muted table-loading">Quarantine vault is empty.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 7. VULNERABILITY SCANNER SCREEN -->
+      <section class="screen" id="vulnerabilities-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">SECURITY POSTURE &amp; CVE REPOSITORY</p>
+            <h1>Vulnerability Scanner</h1>
+            <p class="muted">Audit authorized host and subnet ports, legacy protocols, weak encryption suites, and map findings to CVSS v3.1 remediations.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-rescan-vulnerabilities"><span>↻</span> Audit Vulnerabilities</button>
+          </div>
+        </div>
+
+        <!-- Vulnerability Score Overview -->
+        <div class="vulnerability-header-grid" style="display:grid;grid-template-columns:300px 1fr;gap:18px;margin-bottom:20px">
+          <div class="card" style="display:flex;align-items:center;gap:18px;padding:24px">
+            <div class="score-ring">
+              <div><strong id="vuln-score-val">100</strong><small>/100</small></div>
+            </div>
+            <div>
+              <p class="eyebrow">POSTURE RATING</p>
+              <h3 id="vuln-rating-val">SECURE</h3>
+              <small class="muted" id="vuln-target-sub">Target: 127.0.0.1 (Localhost)</small>
+            </div>
+          </div>
+          <div class="card" style="display:flex;align-items:center;justify-content:space-around;padding:20px">
+            <div style="text-align:center">
+              <strong id="vuln-crit-count" style="display:block;font-size:24px;color:var(--red)">0</strong>
+              <small class="muted">Critical Risk</small>
+            </div>
+            <div style="text-align:center">
+              <strong id="vuln-high-count" style="display:block;font-size:24px;color:#f97316">0</strong>
+              <small class="muted">High Risk</small>
+            </div>
+            <div style="text-align:center">
+              <strong id="vuln-med-count" style="display:block;font-size:24px;color:var(--yellow)">0</strong>
+              <small class="muted">Medium Risk</small>
+            </div>
+            <div style="text-align:center">
+              <strong id="vuln-low-count" style="display:block;font-size:24px;color:var(--cyan)">0</strong>
+              <small class="muted">Low Risk</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vulnerability Findings Cards/List -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">AUDIT FINDINGS</p>
+            <h2>Identified Security Misconfigurations &amp; Exposed Services</h2>
+          </div>
+          <span class="selection-counter" id="vuln-findings-badge">0 Findings</span>
+        </div>
+
+        <div id="vuln-findings-container" class="vuln-findings-list" style="display:flex;flex-direction:column;gap:12px">
+          <!-- Dynamically populated via renderVulnerabilities() -->
+        </div>
+      </section>
+
+      <!-- 8. INTRUSION DETECTION SYSTEM (IDS) SCREEN -->
+      <section class="screen" id="ids-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">NETWORK THREAT TELEMETRY &amp; MITRE ATT&amp;CK</p>
+            <h1>Intrusion Detection System (IDS)</h1>
+            <p class="muted">Real-time stateful socket inspection, port-scan heuristics, flood packet detection, and suspicious outbound beacon analysis.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="btn-clear-ids-events"><span>🧹</span> Clear Alerts</button>
+            <button class="primary-button" id="btn-rescan-ids"><span>↻</span> Analyze Airspace IDS</button>
+          </div>
+        </div>
+
+        <!-- IDS Threat Level Banner -->
+        <div class="card firewall-overview-card" style="margin-bottom:20px">
+          <div class="firewall-badge-wrap">
+            <span class="firewall-shield-big">⚡</span>
+            <div>
+              <p class="eyebrow">INTRUSION MONITOR STATUS</p>
+              <h2 id="ids-threat-headline">Threat Level: NOMINAL</h2>
+              <small class="muted" id="ids-sockets-evaluated">Evaluating live sockets and half-open SYN handshakes.</small>
+            </div>
+          </div>
+          <div class="firewall-score-pill good" id="ids-status-pill">
+            <strong id="ids-status-text">ACTIVE</strong>
+            <span>MONITORING</span>
+          </div>
+        </div>
+
+        <!-- IDS Events Feed -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">INTRUSION EVENTS FEED</p>
+            <h2>Detected Network Anomalies &amp; Intrusion Triggers</h2>
+          </div>
+          <span class="selection-counter" id="ids-events-count-badge">0 Events</span>
+        </div>
+
+        <div id="ids-events-feed" style="display:flex;flex-direction:column;gap:12px">
+          <!-- Dynamically populated via renderIds() -->
+        </div>
+      </section>
+
+      <!-- 9. THREAT INTELLIGENCE SCREEN -->
+      <section class="screen" id="intel-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">CYBER THREAT INTELLIGENCE (CTI) &amp; IOC REPOSITORY</p>
+            <h1>Threat Intelligence</h1>
+            <p class="muted">Live Indicators of Compromise (IoCs), known malicious IP/domain feeds, and 802.11 wireless security advisories.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-sync-threat-intel"><span>↻</span> Sync CTI Feed</button>
+          </div>
+        </div>
+
+        <!-- IoC Quick Lookup Bar -->
+        <div class="card panel" style="margin-bottom:20px">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">IOC INSTANT REPUTATION LOOKUP</p>
+              <h3>Query IP, Domain, Hash, or CVE</h3>
+            </div>
+          </div>
+          <div class="malware-scan-bar" style="margin-top:12px">
+            <div class="search-input-wrap" style="flex:1">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="intel-query-input" placeholder="e.g. 185.220.101.5, evil-twin-portal.net, CVE-2023-45866..." />
+            </div>
+            <button class="primary-button" id="btn-intel-lookup">Check Indicator</button>
+          </div>
+          <div id="intel-lookup-result" style="margin-top:12px" hidden></div>
+        </div>
+
+        <!-- Malicious IPs and Domains Table -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">ACTIVE IOC FEED</p>
+            <h2>Known Malicious IP Addresses &amp; C2 Infrastructure</h2>
+          </div>
+        </div>
+        <div class="card table-card">
+          <table class="advanced-wifi-table" id="intel-ips-table">
+            <thead>
+              <tr>
+                <th>Indicator (IP / Host)</th>
+                <th>Threat Actor / Campaign</th>
+                <th>Classification</th>
+                <th>Confidence Level</th>
+                <th>Risk Score</th>
+              </tr>
+            </thead>
+            <tbody id="intel-ips-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- CVE Wireless Advisories -->
+        <div class="section-title" style="margin-top:24px">
+          <div>
+            <p class="eyebrow">SECURITY ADVISORIES</p>
+            <h2>Critical 802.11 &amp; Protocol Vulnerabilities</h2>
+          </div>
+        </div>
+        <div id="intel-advisories-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- 10. SECURITY LOGS SCREEN -->
+      <section class="screen" id="logs-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">UNIFIED AUDIT TRAIL</p>
+            <h1>Security Logs</h1>
+            <p class="muted">Centralized immutable audit records of firewall changes, malware scans, IDS events, and network state changes.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="secondary-button" id="btn-export-logs-json"><span>📄</span> Export JSON</button>
+            <button class="secondary-button" id="btn-export-logs-csv"><span>📊</span> Export CSV</button>
+            <button class="primary-button" id="btn-refresh-logs"><span>↻</span> Refresh Logs</button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="scanner-filter-bar card" style="margin-bottom:18px">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="logs-search-input" placeholder="Search audit messages, actions, or actors..." />
+          </div>
+          <div class="filter-controls">
+            <select id="logs-module-select" class="select filter-dropdown">
+              <option value="ALL">All Modules</option>
+              <option value="FIREWALL">Firewall</option>
+              <option value="MALWARE">Malware</option>
+              <option value="IDS">IDS</option>
+              <option value="WIFI">Wi-Fi</option>
+              <option value="VULN_SCAN">Vulnerability</option>
+            </select>
+            <select id="logs-severity-select" class="select filter-dropdown">
+              <option value="ALL">All Severities</option>
+              <option value="INFO">Info</option>
+              <option value="WARNING">Warning</option>
+              <option value="CRITICAL">Critical</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card table-card">
+          <table class="advanced-wifi-table" id="security-logs-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Module</th>
+                <th>Action</th>
+                <th>Actor</th>
+                <th>Severity</th>
+                <th>Message &amp; Details</th>
+              </tr>
+            </thead>
+            <tbody id="security-logs-tbody">
+              <!-- Dynamically populated via renderLogs() -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 11. REPORTS & ANALYTICS SCREEN -->
+      <section class="screen" id="reports-screen">
+        <div class="page-heading inline-heading">
+          <div>
+            <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+            <p class="eyebrow">EXECUTIVE AUDIT INTELLIGENCE</p>
+            <h1>Reports &amp; Analytics</h1>
+            <p class="muted">Generate comprehensive executive cybersecurity audits, historical score compliance reports, and export compliance artifacts.</p>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" id="btn-open-full-pdf-report"><span>📄</span> Generate Formal PDF</button>
+          </div>
+        </div>
+
+        <!-- Report Generation Quick Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">
+          <div class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">DAILY ASSESSMENT</p>
+                <h3>Airspace &amp; LAN Health Check</h3>
+              </div>
+            </div>
+            <p class="muted" style="font-size:12px;margin:10px 0 16px">Complete snapshot of active Wi-Fi encryption, connected devices, and listening attack surface ports.</p>
+            <button class="secondary-button" id="btn-export-daily-pdf" style="width:100%">Download Daily Report (PDF)</button>
+          </div>
+
+          <div class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">WEEKLY COMPREHENSIVE</p>
+                <h3>Full Cybersecurity Audit</h3>
+              </div>
+            </div>
+            <p class="muted" style="font-size:12px;margin:10px 0 16px">Detailed multi-vector audit including firewall rules, malware scans, IDS telemetry, and router recommendations.</p>
+            <button class="primary-button" id="btn-export-weekly-pdf" style="width:100%">Download Full Audit (PDF)</button>
+          </div>
+
+          <div class="card panel">
+            <div class="panel-title">
+              <div>
+                <p class="eyebrow">RAW TELEMETRY</p>
+                <h3>CSV Data Export</h3>
+              </div>
+            </div>
+            <p class="muted" style="font-size:12px;margin:10px 0 16px">Raw structured CSV tables for integration with SIEM tools (Splunk, Elastic) or spreadsheet analysis.</p>
+            <button class="secondary-button" id="btn-export-all-csv" style="width:100%">Export All Datasets (CSV)</button>
+          </div>
+        </div>
+
+        <!-- Historical Reports Table -->
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">HISTORICAL ARCHIVE</p>
+            <h2>Previously Generated Security Reports</h2>
+          </div>
+        </div>
+        <div class="card table-card">
+          <table class="advanced-wifi-table" id="generated-reports-table">
+            <thead>
+              <tr>
+                <th>Report ID</th>
+                <th>Type</th>
+                <th>File Name</th>
+                <th>Generated Date</th>
+                <th>Summary Snapshot</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="generated-reports-tbody">
+              <!-- Dynamically populated via renderReportsList() -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MODAL: ADD FIREWALL RULE -->
+      <div class="modal-backdrop" id="add-fw-rule-modal" hidden>
+        <div class="modal-card card" style="max-width:520px;width:90%">
+          <div class="modal-head">
+            <div>
+              <p class="eyebrow">SECURITY POLICY</p>
+              <h2>Add Firewall Filtering Rule</h2>
+            </div>
+            <button type="button" class="close-btn" id="btn-close-fw-modal">✕</button>
+          </div>
+          <form id="fw-create-rule-form" style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">RULE NAME</label>
+              <input type="text" id="fw-rule-name-input" class="text-input" placeholder="e.g. Block_Suspicious_Port_8080" required />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">DIRECTION</label>
+                <select id="fw-rule-dir-select" class="select" style="width:100%">
+                  <option value="IN">Inbound (Block Incoming)</option>
+                  <option value="OUT">Outbound (Block Outgoing)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">ACTION</label>
+                <select id="fw-rule-act-select" class="select" style="width:100%">
+                  <option value="BLOCK">BLOCK (Deny Traffic)</option>
+                  <option value="ALLOW">ALLOW (Permit Traffic)</option>
+                </select>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div>
+                <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">PROTOCOL</label>
+                <select id="fw-rule-proto-select" class="select" style="width:100%">
+                  <option value="TCP">TCP</option>
+                  <option value="UDP">UDP</option>
+                </select>
+              </div>
+              <div>
+                <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">LOCAL PORT</label>
+                <input type="text" id="fw-rule-port-input" class="text-input" placeholder="e.g. 8080 or ANY" />
+              </div>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">REMOTE IP ADDRESS (OPTIONAL)</label>
+              <input type="text" id="fw-rule-ip-input" class="text-input" placeholder="e.g. 192.168.1.50 or ANY" />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+              <button type="button" class="secondary-button" id="btn-cancel-fw-rule">Cancel</button>
+              <button type="submit" class="primary-button" id="btn-submit-fw-rule">Apply &amp; Enforce Rule</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 13. PREFERENCES / SETTINGS SCREEN -->
+      <section class="screen" id="settings-screen">
+        <div class="page-heading">
+          <button class="back-button" data-screen="home">‹ <span>Back</span></button>
+          <p class="eyebrow">PREFERENCES &amp; SECURITY CONFIGURATION</p>
+          <h1>Settings</h1>
+          <p class="muted">Manage your connected network preferences, Wi-Fi keys, and NetGuard configuration.</p>
+        </div>
+        <div class="settings-network-banner card">
+          <div class="settings-network-info">
+            <span class="connected-dot"></span>
+            <div>
+              <small>ACTIVE WIFI CONNECTION</small>
+              <h2 id="settings-network-name">Home_WiFi</h2>
+              <p id="settings-network-details">5 GHz · Channel 36 · WPA2-Personal · Signal: -48 dBm (Excellent)</p>
+
+              <!-- Connected Wi-Fi Password Display in Settings -->
+              <div class="settings-password-row">
+                <span class="key-icon">🔑</span>
+                <span>Connected Wi-Fi Password:</span>
+                <strong id="settings-pass-val" class="password-val">••••••••</strong>
+                <button type="button" class="pass-toggle-btn" id="toggle-pass-settings">Show</button>
+                <button type="button" class="pass-copy-btn" id="copy-pass-settings">Copy</button>
+              </div>
+            </div>
+          </div>
+          <span class="status-chip good">CONNECTED</span>
+        </div>
+        <div class="settings-list card">
+          <div class="setting-row">
+            <div><strong>Appearance Theme</strong><small>Choose NetGuard visual theme</small></div>
+            <div class="theme-select-group">
+              <select id="theme-selector-settings" class="theme-select">
+                <option value="cyber-dark">🌙 Cyber Dark (Default)</option>
+                <option value="matrix">🟢 Matrix Terminal</option>
+                <option value="synthwave">🟣 Midnight Synthwave</option>
+                <option value="obsidian">🌑 Stealth Obsidian (OLED)</option>
+                <option value="nordic">🌊 Nordic Frost (Arctic)</option>
+                <option value="light">☀️ Tech Light (Daylight)</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div><strong>Scan automatically on connect</strong><small>Run a security check whenever you join Home_WiFi
+                or a new network</small></div>
+            <button class="toggle on" data-setting="auto_scan"><span></span></button>
+          </div>
+          <div class="setting-row">
+            <div><strong>Security Notifications</strong><small>Get alerts about network security threats and suspicious
+                devices</small></div>
+            <button class="toggle on" data-setting="notifications"><span></span></button>
+          </div>
+          <div class="setting-row">
+            <div><strong>Device WiFi Tracking</strong><small>Display connected WiFi network name on all monitored
+                devices</small></div>
+            <button class="toggle on" data-setting="device_wifi_tracking"><span></span></button>
+          </div>
+          <div class="setting-row">
+            <div><strong>Export Formats</strong><small>Download official audit data for compliance reporting</small>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="secondary-button" id="btn-export-pdf-settings"
+                style="padding:7px 12px;font-size:11px">PDF</button>
+              <button class="secondary-button" id="btn-export-csv-settings"
+                style="padding:7px 12px;font-size:11px">CSV</button>
+              <button class="secondary-button" id="btn-export-json-settings"
+                style="padding:7px 12px;font-size:11px">JSON</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="reference-bottom-nav">
+      <button class="active" data-screen="home"><span>⌂</span>Home</button>
+      <button data-screen="scan"><span>◉</span>Scan</button>
+      <button data-screen="devices"><span>▣</span>Devices</button>
+      <button data-screen="threats"><span>⚠</span>Threats</button>
+      <button data-screen="performance"><span>⚡</span>Speed</button>
+      <button data-screen="ai-chat"><span>✦</span>AI</button>
+      <button data-screen="settings"><span>⚙</span>Settings</button>
+    </nav>
+  </div>
+
+  <!-- PDF SECURITY REPORT MODAL / PRINTABLE DOCUMENT -->
+  <div id="pdf-modal-backdrop" class="modal-backdrop" hidden>
+    <div class="pdf-modal-card card" id="pdf-report-document">
+      <div class="pdf-modal-actions no-print">
+        <button class="primary-button" id="btn-print-pdf-now"><span>🖨</span> Print / Save as PDF</button>
+        <button class="secondary-button" id="btn-close-pdf-modal">✕ Close</button>
+      </div>
+
+      <div class="pdf-report-header">
+        <div class="pdf-brand-mark">
+          <div class="brand-mark">
+            <svg class="brand-svg-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L3 6v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V6l-9-4z" />
+              <path d="M8.5 11a5 5 0 0 1 7 0" />
+              <path d="M10 13.5a2.5 2.5 0 0 1 4 0" />
+              <circle cx="12" cy="16" r="1" fill="currentColor" />
+            </svg>
+          </div>
+          <div>
+            <h1>NETGUARD CYBERSECURITY AUDIT</h1>
+            <p>Official 802.11 Airspace &amp; LAN Security Assessment Report</p>
+          </div>
+        </div>
+        <div class="pdf-meta-box">
+          <div>Report Date: <strong id="pdf-report-date">Nov 21, 2026</strong></div>
+          <div>Audit Engine: <strong>NetGuard Enterprise v2.0</strong></div>
+          <div>Platform: <strong id="pdf-system-platform">Windows 64-bit</strong></div>
+        </div>
+      </div>
+
+      <hr class="pdf-divider" />
+
+      <!-- Executive Assessment Score Box -->
+      <div class="pdf-section">
+        <h3>1. EXECUTIVE ASSESSMENT SUMMARY</h3>
+        <div class="pdf-score-banner">
+          <div class="pdf-score-circle">
+            <span class="pdf-score-num" id="pdf-score-val">82</span>
+            <small>/ 100</small>
+          </div>
+          <div class="pdf-score-text">
+            <h4 id="pdf-score-rating">GOOD PROTECTION LEVEL</h4>
+            <p id="pdf-exec-summary">Active connection is secured with standard encryption. No unauthorized rogue
+              spoofing detected.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Network Telemetry -->
+      <div class="pdf-section">
+        <h3>2. TARGET NETWORK TELEMETRY</h3>
+        <table class="pdf-table">
+          <tbody>
+            <tr>
+              <td><strong>Target SSID:</strong></td>
+              <td id="pdf-target-ssid">Home_WiFi</td>
+              <td><strong>BSSID (MAC):</strong></td>
+              <td id="pdf-target-bssid">8e:29:31:cd:69:bc</td>
+            </tr>
+            <tr>
+              <td><strong>Frequency Band:</strong></td>
+              <td id="pdf-target-band">5 GHz</td>
+              <td><strong>Operating Channel:</strong></td>
+              <td id="pdf-target-channel">36</td>
+            </tr>
+            <tr>
+              <td><strong>Encryption Protocol:</strong></td>
+              <td id="pdf-target-encryption">WPA2-Personal (AES)</td>
+              <td><strong>Signal Strength:</strong></td>
+              <td id="pdf-target-signal">-48 dBm (92%)</td>
+            </tr>
+            <tr>
+              <td><strong>Hardware Vendor:</strong></td>
+              <td id="pdf-target-vendor">Realtek Semiconductor</td>
+              <td><strong>Wi-Fi Key Status:</strong></td>
+              <td id="pdf-target-pass-status">Passphrase Configured</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Airspace Threat Findings -->
+      <div class="pdf-section">
+        <h3>3. AIRSPACE THREAT &amp; ROGUE AP FINDINGS</h3>
+        <div id="pdf-threat-findings-list">
+          <p class="muted">No rogue Evil Twin access points or active deauthentication attacks detected in immediate
+            airspace.</p>
+        </div>
+      </div>
+
+      <!-- Connected Device Inventory -->
+      <div class="pdf-section">
+        <h3>4. AUTHORIZED SUBNET DEVICE INVENTORY</h3>
+        <table class="pdf-table">
+          <thead>
+            <tr>
+              <th>Device Name</th>
+              <th>IP Address</th>
+              <th>MAC Address</th>
+              <th>Hardware Vendor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="pdf-devices-table-body">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- AI Recommendations & Hardening Steps -->
+      <div class="pdf-section">
+        <h3>5. AI SECURITY RECOMMENDATIONS &amp; ROUTER HARDENING</h3>
+        <ol id="pdf-recommendations-list" class="pdf-recs-list">
+          <li><strong>Disable WPS (Wi-Fi Protected Setup):</strong> Eliminate brute-force offline PIN recovery.</li>
+          <li><strong>Enforce WPA2-AES / WPA3-Personal Only:</strong> Disable legacy WPA-TKIP compatibility.</li>
+          <li><strong>Update Router Administrative Password:</strong> Ensure default factory credentials are not
+            accessible.</li>
+        </ol>
+      </div>
+
+      <div class="pdf-footer">
+        <small>Confidential Security Assessment Document • Generated automatically by NetGuard Security Analyzer •
+          Authorized Auditor Audit</small>
+      </div>
+    </div>
+  </div>
+
+  <script src="qrcode.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
