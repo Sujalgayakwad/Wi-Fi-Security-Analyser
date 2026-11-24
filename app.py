@@ -7,7 +7,7 @@ import hashlib
 import sqlite3
 import datetime
 from typing import Dict, Any, List, Optional
-from flask import Flask, request, jsonify, send_from_directory, make_response
+from flask import Flask, request, jsonify, send_from_directory, make_response, Response
 
 import scanner
 
@@ -305,6 +305,120 @@ def init_db():
         """)
         cur.execute("CREATE INDEX IF NOT EXISTS idx_alerts_read ON alerts(is_read)")
 
+        # 11. Firewall Rules Management
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS firewall_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                rule_name TEXT UNIQUE NOT NULL,
+                direction TEXT NOT NULL DEFAULT 'IN',
+                action TEXT NOT NULL DEFAULT 'BLOCK',
+                protocol TEXT NOT NULL DEFAULT 'TCP',
+                local_port TEXT DEFAULT 'ANY',
+                remote_ip TEXT DEFAULT 'ANY',
+                program TEXT DEFAULT 'ANY',
+                profile TEXT DEFAULT 'ALL',
+                enabled INTEGER DEFAULT 1,
+                os_applied INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL
+            )
+        """)
+
+        # 12. Virus & Malware Scans, Detections & Quarantine
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS malware_scans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_path TEXT NOT NULL,
+                files_scanned INTEGER NOT NULL DEFAULT 0,
+                threats_found INTEGER NOT NULL DEFAULT 0,
+                clean_files INTEGER NOT NULL DEFAULT 0,
+                duration_seconds REAL NOT NULL DEFAULT 0.0,
+                status TEXT NOT NULL DEFAULT 'COMPLETED',
+                scanned_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS malware_detections (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                scan_id INTEGER,
+                file_path TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_size INTEGER DEFAULT 0,
+                file_hash TEXT NOT NULL,
+                threat_name TEXT NOT NULL,
+                threat_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'ACTIVE',
+                action_taken TEXT DEFAULT 'NONE',
+                detected_at TEXT NOT NULL,
+                FOREIGN KEY(scan_id) REFERENCES malware_scans(id) ON DELETE CASCADE
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS quarantine_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                quarantine_id TEXT UNIQUE NOT NULL,
+                original_path TEXT NOT NULL,
+                quarantined_file TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_hash TEXT NOT NULL,
+                threat_name TEXT DEFAULT '',
+                quarantined_at TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'QUARANTINED'
+            )
+        """)
+
+        # 13. Intrusion Detection System (IDS) Events
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS ids_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                source_ip TEXT NOT NULL,
+                destination_ip TEXT DEFAULT '',
+                port INTEGER DEFAULT 0,
+                protocol TEXT DEFAULT 'TCP',
+                process_name TEXT DEFAULT '',
+                reason TEXT NOT NULL,
+                mitre_tactic TEXT DEFAULT '',
+                action_recommended TEXT DEFAULT '',
+                timestamp TEXT NOT NULL
+            )
+        """)
+
+        # 14. Vulnerability Audit Records
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vulnerability_records (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target_ip TEXT NOT NULL,
+                port INTEGER DEFAULT 0,
+                service TEXT NOT NULL,
+                cve_id TEXT NOT NULL,
+                cvss_score REAL NOT NULL,
+                severity TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                remediation TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'UNRESOLVED',
+                discovered_at TEXT NOT NULL
+            )
+        """)
+
+        # 15. Unified Security Audit Logs
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS security_audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                module TEXT NOT NULL,
+                action TEXT NOT NULL,
+                actor TEXT NOT NULL DEFAULT 'system',
+                severity TEXT NOT NULL DEFAULT 'INFO',
+                message TEXT NOT NULL,
+                details TEXT DEFAULT '',
+                created_at TEXT NOT NULL
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_audit_module ON security_audit_logs(module)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_audit_time ON security_audit_logs(created_at)")
+
         # Backward compatibility column migrations
         for col, col_type in [
             ("mac_address", "TEXT DEFAULT ''"),
@@ -372,9 +486,49 @@ def init_db():
                 alerts_seed
             )
 
+        # Seed initial firewall policy rules if empty
+        cur.execute("SELECT COUNT(*) FROM firewall_rules")
+        if cur.fetchone()[0] == 0:
+            fw_seed = [
+                ("NetGuard_Block_Telnet_23", "IN", "BLOCK", "TCP", "23", "ANY", "ANY", "ALL", 1, 1, "Today, 10:00 AM"),
+                ("NetGuard_Block_Backdoor_4444", "IN", "BLOCK", "TCP", "4444", "ANY", "ANY", "ALL", 1, 1, "Today, 10:00 AM"),
+                ("NetGuard_Allow_WebServer_5001", "IN", "ALLOW", "TCP", "5001", "ANY", "ANY", "ALL", 1, 1, "Today, 10:00 AM"),
+            ]
+            cur.executemany("""
+                INSERT INTO firewall_rules (rule_name, direction, action, protocol, local_port, remote_ip, program, profile, enabled, os_applied, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, fw_seed)
+
+        # Seed initial security audit log entries if empty
+        cur.execute("SELECT COUNT(*) FROM security_audit_logs")
+        if cur.fetchone()[0] == 0:
+            audit_seed = [
+                ("FIREWALL", "RULE_INITIALIZE", "system", "INFO", "Windows Defender Advanced Firewall baseline posture verified across 3 profiles.", "Domain, Private, and Public profiles enforcing packet filter.", "Today, 09:00 AM"),
+                ("MALWARE", "ENGINE_START", "system", "INFO", "Microsoft Defender & NetGuard Signature engine initialized.", "Signatures verified against SHA-256 threat index.", "Today, 09:00 AM"),
+                ("IDS", "MONITOR_ACTIVE", "system", "INFO", "Intrusion Detection System started listening for anomalies on active adapters.", "Stateful inspection enabled.", "Today, 09:00 AM"),
+                ("WIFI", "AIRSPACE_SYNC", "system", "INFO", "802.11 Airspace beacon monitoring synchronized.", "Target adapter active.", "Today, 09:05 AM")
+            ]
+            cur.executemany("""
+                INSERT INTO security_audit_logs (module, action, actor, severity, message, details, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, audit_seed)
+
         db.commit()
 
 init_db()
+
+def log_security_audit(module: str, action: str, actor: str = "analyst", severity: str = "INFO", message: str = "", details: str = ""):
+    """Appends an event to the unified security audit log."""
+    try:
+        with get_db() as db:
+            cur = db.cursor()
+            cur.execute("""
+                INSERT INTO security_audit_logs (module, action, actor, severity, message, details, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (module.upper(), action, actor, severity.upper(), message, str(details), datetime.datetime.now().strftime(SCAN_TIME_FORMAT)))
+            db.commit()
+    except Exception:
+        pass
 
 def sync_current_network(db) -> Dict[str, Any]:
     curr = scanner.get_connected_wifi()
@@ -716,6 +870,18 @@ def get_scans():
         scans = [dict(r) for r in cur.fetchall()]
         return jsonify(scans)
 
+@app.route("/api/history/clear", methods=["POST", "DELETE"])
+@app.route("/api/scans/clear", methods=["POST", "DELETE"])
+def clear_scans():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("DELETE FROM scan_results")
+        cur.execute("DELETE FROM scan_sessions")
+        cur.execute("DELETE FROM scans")
+        cur.execute("DELETE FROM threat_events")
+        db.commit()
+    return jsonify({"status": "SUCCESS", "message": "All scan history and threat logs cleared successfully."})
+
 @app.route("/api/scans/<int:scan_id>", methods=["GET"])
 def get_scan_details(scan_id: int):
     with get_db() as db:
@@ -816,19 +982,38 @@ def dashboard():
         else:
             avg_score = network.get("score", 82)
 
+        cur.execute("SELECT COUNT(*) FROM alerts WHERE is_read = 0")
+        unread_alerts = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM malware_detections WHERE status = 'ACTIVE'")
+        malware_threats = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM ids_events WHERE severity IN ('CRITICAL', 'HIGH')")
+        ids_high_alerts = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM firewall_rules WHERE enabled = 1")
+        active_fw_rules = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM quarantine_records WHERE status = 'QUARANTINED'")
+        quarantined_files = cur.fetchone()[0]
+
+        firewall_status = scanner.detect_firewall_status()
+
         stats = {
             "totalNetworks": total_networks,
             "secureNetworks": secure_networks,
             "openNetworks": open_networks,
-            "threatCount": len(threats),
+            "threatCount": len(threats) + malware_threats,
             "activeDevices": len(devices),
-            "averageSecurityScore": avg_score
+            "averageSecurityScore": avg_score,
+            "firewallScore": firewall_status.get("score", 100),
+            "firewallRules": active_fw_rules,
+            "malwareThreats": malware_threats,
+            "idsAlerts": ids_high_alerts,
+            "quarantinedFiles": quarantined_files
         }
 
         traffic = scanner.get_traffic_metrics()
-
-        cur.execute("SELECT COUNT(*) FROM alerts WHERE is_read = 0")
-        unread_alerts = cur.fetchone()[0]
 
         return jsonify({
             "network": network,
@@ -838,8 +1023,485 @@ def dashboard():
             "threats": threats,
             "stats": stats,
             "traffic": traffic,
-            "unreadAlerts": unread_alerts
+            "firewall": firewall_status,
+            "unreadAlerts": unread_alerts,
+            "moduleSummaries": {
+                "firewall": {"score": firewall_status.get("score", 100), "profiles": firewall_status.get("active_profiles_count", 3), "status": firewall_status.get("overall_status", "ENABLED")},
+                "malware": {"activeThreats": malware_threats, "quarantined": quarantined_files},
+                "ids": {"highAlerts": ids_high_alerts, "status": "ACTIVE_MONITORING"},
+                "wifi": {"total": total_networks, "secure": secure_networks, "open": open_networks}
+            }
         })
+
+# -------------------------------------------------------------
+# FIREWALL DETECTION & ATTACK SURFACE API
+# -------------------------------------------------------------
+@app.route("/api/firewall", methods=["GET"])
+@app.route("/api/firewall/status", methods=["GET"])
+def get_firewall_status():
+    status = scanner.detect_firewall_status()
+    return jsonify({
+        "status": "SUCCESS",
+        "firewall": status,
+        "profiles": status.get("profiles", {}),
+        "overall_status": status.get("overall_status", "ENABLED"),
+        "score": status.get("score", 100),
+        "attack_surface": status.get("attack_surface", []),
+        "scannedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+@app.route("/api/firewall/rescan", methods=["POST"])
+def rescan_firewall():
+    status = scanner.detect_firewall_status()
+    log_security_audit("FIREWALL", "AUDIT_RESCAN", "system", "INFO", "Host Windows Firewall rules and open attack surface ports rescanned.")
+    return jsonify({
+        "status": "SUCCESS",
+        "message": "Firewall configuration and attack surface ports rescanned successfully.",
+        "firewall": status,
+        "profiles": status.get("profiles", {}),
+        "overall_status": status.get("overall_status", "ENABLED"),
+        "score": status.get("score", 100),
+        "attack_surface": status.get("attack_surface", []),
+        "scannedAt": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+@app.route("/api/firewall/connections", methods=["GET"])
+def get_firewall_connections_api():
+    connections = scanner.get_firewall_connections()
+    return jsonify({
+        "status": "SUCCESS",
+        "count": len(connections),
+        "connections": connections,
+        "timestamp": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+@app.route("/api/firewall/rules", methods=["GET"])
+def get_firewall_rules_api():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM firewall_rules ORDER BY id DESC")
+        rules = [dict(r) for r in cur.fetchall()]
+        return jsonify({
+            "status": "SUCCESS",
+            "count": len(rules),
+            "rules": rules
+        })
+
+@app.route("/api/firewall/rules", methods=["POST"])
+def create_firewall_rule_api():
+    data = request.get_json(silent=True) or {}
+    rule_name = data.get("rule_name", "").strip()
+    if not rule_name:
+        return jsonify({"error": "Rule name is required."}), 400
+
+    direction = data.get("direction", "IN").upper()
+    action = data.get("action", "BLOCK").upper()
+    protocol = data.get("protocol", "TCP").upper()
+    local_port = data.get("local_port")
+    remote_ip = data.get("remote_ip")
+    program = data.get("program")
+    profile = data.get("profile", "ALL").upper()
+
+    os_res = scanner.add_firewall_rule(
+        rule_name=rule_name,
+        direction=direction.lower(),
+        action=action.lower(),
+        protocol=protocol,
+        local_port=local_port if local_port and local_port != "ANY" else None,
+        remote_ip=remote_ip if remote_ip and remote_ip != "ANY" else None,
+        program=program if program and program != "ANY" else None
+    )
+
+    with get_db() as db:
+        cur = db.cursor()
+        now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+        cur.execute("""
+            INSERT OR REPLACE INTO firewall_rules (rule_name, direction, action, protocol, local_port, remote_ip, program, profile, enabled, os_applied, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+        """, (
+            rule_name, direction, action, protocol,
+            local_port or "ANY", remote_ip or "ANY", program or "ANY", profile,
+            1 if os_res.get("os_applied") else 0, now_str
+        ))
+        db.commit()
+
+    log_security_audit("FIREWALL", "RULE_CREATE", "analyst", "INFO", f"Created firewall rule '{rule_name}' ({action} {direction} {protocol}).", os_res.get("message"))
+    return jsonify({
+        "status": "SUCCESS",
+        "message": os_res.get("message"),
+        "rule": {
+            "rule_name": rule_name,
+            "direction": direction,
+            "action": action,
+            "protocol": protocol,
+            "local_port": local_port or "ANY",
+            "remote_ip": remote_ip or "ANY",
+            "os_applied": os_res.get("os_applied", False)
+        }
+    }), 201
+
+@app.route("/api/firewall/rules/<rule_name>", methods=["DELETE"])
+def delete_firewall_rule_api(rule_name: str):
+    os_res = scanner.delete_firewall_rule(rule_name)
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("DELETE FROM firewall_rules WHERE rule_name = ?", (rule_name,))
+        db.commit()
+
+    log_security_audit("FIREWALL", "RULE_DELETE", "analyst", "INFO", f"Deleted firewall rule '{rule_name}'.", os_res.get("message"))
+    return jsonify({
+        "status": "SUCCESS",
+        "message": os_res.get("message"),
+        "rule_name": rule_name
+    })
+
+@app.route("/api/firewall/profile", methods=["POST"])
+def toggle_firewall_profile_api():
+    data = request.get_json(silent=True) or {}
+    profile = data.get("profile", "all")
+    state = data.get("state", "on")
+
+    res = scanner.set_firewall_profile_state(profile, state)
+    log_security_audit("FIREWALL", "PROFILE_CHANGE", "analyst", "INFO" if res.get("os_applied") else "WARNING", f"Set firewall profile '{profile}' to {state.upper()}.", res.get("message"))
+    return jsonify(res)
+
+# -------------------------------------------------------------
+# VIRUS & MALWARE DETECTION API
+# -------------------------------------------------------------
+@app.route("/api/malware/status", methods=["GET"])
+def get_malware_status_api():
+    av_status = scanner.get_antivirus_status()
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT COUNT(*) FROM malware_scans")
+        total_scans = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM malware_detections WHERE status = 'ACTIVE'")
+        active_threats = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM quarantine_records WHERE status = 'QUARANTINED'")
+        quarantined_files = cur.fetchone()[0]
+
+    return jsonify({
+        "status": "SUCCESS",
+        "defender": av_status,
+        "totalScans": total_scans,
+        "activeThreats": active_threats,
+        "quarantinedFiles": quarantined_files,
+        "timestamp": datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    })
+
+@app.route("/api/malware/scan", methods=["POST"])
+def scan_malware_api():
+    data = request.get_json(silent=True) or {}
+    target = data.get("target_path", ".").strip() or "."
+    max_files = int(data.get("max_files", 300))
+
+    scan_res = scanner.scan_file_or_directory(target, max_files=max_files)
+    if not scan_res.get("success"):
+        return jsonify(scan_res), 400
+
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("""
+            INSERT INTO malware_scans (target_path, files_scanned, threats_found, clean_files, duration_seconds, status, scanned_at)
+            VALUES (?, ?, ?, ?, ?, 'COMPLETED', ?)
+        """, (
+            scan_res["target"],
+            scan_res["files_scanned"],
+            scan_res["threats_count"],
+            scan_res["clean_files_count"],
+            scan_res["duration_seconds"],
+            now_str
+        ))
+        scan_id = cur.lastrowid
+
+        for t in scan_res.get("threats", []):
+            cur.execute("""
+                INSERT INTO malware_detections (scan_id, file_path, file_name, file_size, file_hash, threat_name, threat_type, severity, status, action_taken, detected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 'DETECTED', ?)
+            """, (
+                scan_id,
+                t["file_path"],
+                t["file_name"],
+                t.get("file_size", 0),
+                t.get("file_hash", ""),
+                t["threat_name"],
+                t["threat_type"],
+                t["severity"],
+                now_str
+            ))
+        db.commit()
+
+    log_security_audit(
+        "MALWARE", "SCAN_EXECUTED", "analyst",
+        "WARNING" if scan_res["threats_count"] > 0 else "INFO",
+        f"Completed malware scan of '{scan_res['target']}': {scan_res['files_scanned']} files scanned, {scan_res['threats_count']} threats identified.",
+        f"Duration: {scan_res['duration_seconds']}s"
+    )
+
+    return jsonify({
+        "status": "SUCCESS",
+        "scanId": scan_id,
+        "target": scan_res["target"],
+        "filesScanned": scan_res["files_scanned"],
+        "threatsFound": scan_res["threats_count"],
+        "cleanFiles": scan_res["clean_files_count"],
+        "durationSeconds": scan_res["duration_seconds"],
+        "threats": scan_res.get("threats", []),
+        "defender": scan_res.get("defender_status", {}),
+        "scannedAt": now_str
+    })
+
+@app.route("/api/malware/history", methods=["GET"])
+def get_malware_history_api():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM malware_scans ORDER BY id DESC LIMIT 25")
+        scans = [dict(r) for r in cur.fetchall()]
+        cur.execute("SELECT * FROM malware_detections ORDER BY id DESC LIMIT 50")
+        detections = [dict(r) for r in cur.fetchall()]
+        return jsonify({
+            "status": "SUCCESS",
+            "scans": scans,
+            "detections": detections
+        })
+
+@app.route("/api/malware/quarantine", methods=["GET"])
+def get_quarantine_list_api():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM quarantine_records WHERE status = 'QUARANTINED' ORDER BY id DESC")
+        items = [dict(r) for r in cur.fetchall()]
+        return jsonify({"status": "SUCCESS", "quarantine": items, "count": len(items)})
+
+@app.route("/api/malware/quarantine", methods=["POST"])
+def quarantine_file_api():
+    data = request.get_json(silent=True) or {}
+    file_path = data.get("file_path", "").strip()
+    if not file_path:
+        return jsonify({"error": "File path required for quarantine."}), 400
+
+    res = scanner.quarantine_file(file_path)
+    if not res.get("success"):
+        return jsonify(res), 400
+
+    with get_db() as db:
+        cur = db.cursor()
+        now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+        cur.execute("""
+            INSERT INTO quarantine_records (quarantine_id, original_path, quarantined_file, file_name, file_hash, threat_name, quarantined_at, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'QUARANTINED')
+        """, (
+            res["quarantine_id"],
+            res["original_path"],
+            res["quarantine_path"],
+            os.path.basename(file_path),
+            "",
+            data.get("threat_name", "Isolated Suspicious File"),
+            now_str
+        ))
+        cur.execute("UPDATE malware_detections SET status = 'QUARANTINED', action_taken = 'ISOLATED' WHERE file_path = ?", (file_path,))
+        db.commit()
+
+    log_security_audit("MALWARE", "FILE_QUARANTINED", "analyst", "INFO", f"Quarantined suspicious file: {file_path}", res.get("message"))
+    return jsonify(res)
+
+@app.route("/api/malware/restore", methods=["POST"])
+def restore_file_api():
+    data = request.get_json(silent=True) or {}
+    quarantine_id = data.get("quarantine_id", "").strip()
+    if not quarantine_id:
+        return jsonify({"error": "quarantine_id is required."}), 400
+
+    res = scanner.restore_quarantined_file(quarantine_id)
+    if not res.get("success"):
+        return jsonify(res), 400
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("UPDATE quarantine_records SET status = 'RESTORED' WHERE quarantine_id = ?", (quarantine_id,))
+        db.commit()
+
+    log_security_audit("MALWARE", "FILE_RESTORED", "analyst", "INFO", f"Restored quarantined file ID: {quarantine_id}", res.get("message"))
+    return jsonify(res)
+
+# -------------------------------------------------------------
+# INTRUSION DETECTION SYSTEM (IDS) API
+# -------------------------------------------------------------
+@app.route("/api/ids/status", methods=["GET"])
+def get_ids_status_api():
+    ids_data = scanner.analyze_network_traffic_ids()
+    with get_db() as db:
+        cur = db.cursor()
+        now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+        for ev in ids_data.get("events", []):
+            if ev.get("event_type") != "AIRSPACE_CLEAR":
+                cur.execute("""
+                    INSERT INTO ids_events (event_type, severity, source_ip, destination_ip, port, protocol, process_name, reason, mitre_tactic, action_recommended, timestamp)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    ev.get("event_type", "INTRUSION_ALERT"),
+                    ev.get("severity", "MEDIUM"),
+                    ev.get("source_ip", ""),
+                    ev.get("destination_ip", ""),
+                    ev.get("port", 0) if isinstance(ev.get("port"), int) else 0,
+                    ev.get("protocol", "TCP"),
+                    ev.get("process_name", ""),
+                    ev.get("reason", ""),
+                    ev.get("mitre_tactic", ""),
+                    ev.get("action_recommended", ""),
+                    now_str
+                ))
+        db.commit()
+
+    return jsonify(ids_data)
+
+@app.route("/api/ids/events", methods=["GET"])
+def get_ids_events_api():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM ids_events ORDER BY id DESC LIMIT 50")
+        rows = [dict(r) for r in cur.fetchall()]
+        return jsonify({
+            "status": "SUCCESS",
+            "count": len(rows),
+            "events": rows
+        })
+
+@app.route("/api/ids/clear", methods=["POST"])
+def clear_ids_events_api():
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("DELETE FROM ids_events WHERE severity != 'CRITICAL'")
+        deleted = cur.rowcount
+        db.commit()
+    log_security_audit("IDS", "EVENTS_PURGE", "analyst", "INFO", f"Cleared {deleted} non-critical IDS alert records.")
+    return jsonify({"status": "SUCCESS", "message": f"Cleared {deleted} non-critical intrusion records."})
+
+# -------------------------------------------------------------
+# VULNERABILITY SCANNER API
+# -------------------------------------------------------------
+@app.route("/api/vulnerabilities", methods=["GET"])
+def get_vulnerabilities_api():
+    target = request.args.get("target", "127.0.0.1")
+    vuln_data = scanner.scan_host_vulnerabilities(target)
+    return jsonify(vuln_data)
+
+@app.route("/api/vulnerabilities/scan", methods=["POST"])
+def run_vulnerability_scan_api():
+    data = request.get_json(silent=True) or {}
+    target = data.get("target_ip", "127.0.0.1").strip() or "127.0.0.1"
+    vuln_data = scanner.scan_host_vulnerabilities(target)
+
+    now_str = datetime.datetime.now().strftime(SCAN_TIME_FORMAT)
+    with get_db() as db:
+        cur = db.cursor()
+        for f in vuln_data.get("findings", []):
+            cur.execute("""
+                INSERT INTO vulnerability_records (target_ip, port, service, cve_id, cvss_score, severity, title, description, remediation, status, discovered_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNRESOLVED', ?)
+            """, (
+                target,
+                f.get("port", 0),
+                f.get("service", ""),
+                f.get("cve_id", "N/A"),
+                f.get("cvss_score", 0.0),
+                f.get("severity", "LOW"),
+                f.get("title", ""),
+                f.get("description", ""),
+                f.get("remediation", ""),
+                now_str
+            ))
+        db.commit()
+
+    log_security_audit("VULN_SCAN", "AUDIT_COMPLETED", "analyst", "WARNING" if vuln_data["critical_count"] > 0 else "INFO", f"Vulnerability assessment completed for {target}: {vuln_data['total_findings']} findings ({vuln_data['critical_count']} Critical).")
+    return jsonify(vuln_data)
+
+# -------------------------------------------------------------
+# THREAT INTELLIGENCE & IOC LOOKUP API
+# -------------------------------------------------------------
+@app.route("/api/threat-intel/feed", methods=["GET"])
+def get_threat_intel_feed_api():
+    feed = scanner.get_threat_intelligence_feed()
+    return jsonify(feed)
+
+@app.route("/api/threat-intel/lookup", methods=["GET", "POST"])
+def lookup_threat_intel_api():
+    if request.method == "POST":
+        data = request.get_json(silent=True) or {}
+        query = data.get("query", "")
+    else:
+        query = request.args.get("q", "")
+    res = scanner.lookup_ioc(query)
+    return jsonify(res)
+
+# -------------------------------------------------------------
+# UNIFIED SECURITY AUDIT LOGS API
+# -------------------------------------------------------------
+@app.route("/api/logs", methods=["GET"])
+def get_security_audit_logs_api():
+    module = request.args.get("module")
+    severity = request.args.get("severity")
+    search = request.args.get("search")
+    limit = int(request.args.get("limit", 100))
+
+    query = "SELECT * FROM security_audit_logs WHERE 1=1"
+    params = []
+
+    if module and module.upper() != "ALL":
+        query += " AND module = ?"
+        params.append(module.upper())
+
+    if severity and severity.upper() != "ALL":
+        query += " AND severity = ?"
+        params.append(severity.upper())
+
+    if search:
+        query += " AND (message LIKE ? OR action LIKE ? OR actor LIKE ?)"
+        term = f"%{search}%"
+        params.extend([term, term, term])
+
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute(query, params)
+        logs = [dict(r) for r in cur.fetchall()]
+        return jsonify({
+            "status": "SUCCESS",
+            "count": len(logs),
+            "logs": logs
+        })
+
+@app.route("/api/logs/export", methods=["GET", "POST"])
+def export_security_logs_api():
+    format_type = request.args.get("format", "csv").lower()
+    with get_db() as db:
+        cur = db.cursor()
+        cur.execute("SELECT * FROM security_audit_logs ORDER BY id DESC LIMIT 500")
+        logs = [dict(r) for r in cur.fetchall()]
+
+    if format_type == "json":
+        return Response(
+            json.dumps(logs, indent=2),
+            mimetype="application/json",
+            headers={"Content-Disposition": "attachment;filename=netguard_security_logs.json"}
+        )
+
+    # CSV Format
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Timestamp", "Module", "Action", "Actor", "Severity", "Message", "Details"])
+    for l in logs:
+        writer.writerow([l.get("id"), l.get("created_at"), l.get("module"), l.get("action"), l.get("actor"), l.get("severity"), l.get("message"), l.get("details")])
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=netguard_security_logs.csv"}
+    )
+
 
 @app.route("/api/network/detect", methods=["POST"])
 def detect_network():

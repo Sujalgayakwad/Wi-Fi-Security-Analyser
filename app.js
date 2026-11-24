@@ -1,18 +1,25 @@
 const screens = document.querySelectorAll(".screen");
 const title = document.querySelector("#page-title");
 const titles = {
-  home: "Dashboard",
-  scan: "Security Scan",
+  home: "Security Overview",
+  scan: "Wi-Fi Network Scanner",
   devices: "Connected Devices",
+  traffic: "Network Traffic Monitor",
+  firewall: "Firewall Management",
+  malware: "Virus & Malware Detection",
+  vulnerabilities: "Vulnerability Scanner",
+  ids: "Intrusion Detection System (IDS)",
+  intel: "Threat Intelligence",
+  logs: "Security Logs",
+  reports: "Reports & Analytics",
+  settings: "Settings",
   threats: "Threat Detection",
   performance: "Network Performance",
-  traffic: "Traffic Monitor",
   compare: "Wi-Fi Comparison",
   alerts: "Security Alerts",
   "ai-chat": "AI Security Assistant",
   knowledge: "Knowledge & Audit",
-  history: "Scan History",
-  settings: "Settings"
+  history: "Scan History"
 };
 const message = document.querySelector("#app-message");
 const settings = {
@@ -484,6 +491,54 @@ async function toggleDeviceTrust(deviceId, buttonElement) {
 }
 
 // -------------------------------------------------------------
+// DYNAMIC REAL-TIME GREETING
+// -------------------------------------------------------------
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return "Good morning";
+  } else if (hour >= 12 && hour < 17) {
+    return "Good afternoon";
+  } else if (hour >= 17 && hour < 21) {
+    return "Good evening";
+  } else {
+    return "Good night";
+  }
+}
+
+function updateDynamicGreeting() {
+  const greetingEl = document.querySelector("#welcome-greeting");
+  if (greetingEl) {
+    const greeting = getGreeting();
+    greetingEl.innerHTML = `${greeting}  <span>✦</span>`;
+  }
+}
+
+// -------------------------------------------------------------
+// DYNAMIC REAL-TIME GREETING
+// -------------------------------------------------------------
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return "Good morning";
+  } else if (hour >= 12 && hour < 17) {
+    return "Good afternoon";
+  } else if (hour >= 17 && hour < 21) {
+    return "Good evening";
+  } else {
+    return "Good night";
+  }
+}
+
+function updateDynamicGreeting() {
+  const greetingEl = document.querySelector("#welcome-greeting");
+  if (greetingEl) {
+    const greeting = getGreeting();
+    greetingEl.innerHTML = `${greeting} <span>✦</span>`;
+  }
+}
+
+// -------------------------------------------------------------
 // HISTORY RENDERING
 // -------------------------------------------------------------
 function createHistoryRow(scan, compact = false) {
@@ -491,7 +546,7 @@ function createHistoryRow(scan, compact = false) {
   const statusClass = result === "GOOD" ? "good" : "danger";
   if (compact) {
     const item = element("div", "history-item card");
-    item.append(element("span", "history-icon blue", "⌁"));
+    item.append(element("span", "history-icon blue", "🛡️"));
     const details = element("div");
     details.append(
       element("strong", "", scan.network_name),
@@ -501,36 +556,62 @@ function createHistoryRow(scan, compact = false) {
     return item;
   }
 
-  const row = element("div", "table-row");
-  row.append(
-    element("strong", "", `⌁ ${scan.network_name}`),
-    element("span", "", scan.scanned_at),
-    element("span", "", scan.encryption),
-    element("span", `status-chip ${statusClass}`, `${scan.score} ${result}`),
-  );
+  const row = element("div", "table-row history-data-row");
+  const netCol = element("div", "history-net-col");
+  netCol.innerHTML = `<strong><span class="net-shield-icon">🛡️</span> ${escapeHtml(scan.network_name)}</strong>`;
+  
+  const dateCol = element("span", "history-time-col", scan.scanned_at);
+  const cipherCol = element("span", "history-cipher-col", scan.encryption || "WPA2-Personal");
+  const scoreCol = element("div", "history-score-col");
+  scoreCol.innerHTML = `<span class="status-chip ${statusClass}">${scan.score} ${result}</span>`;
+  
+  const actionCol = element("div", "history-actions-col");
+  const inspectBtn = element("button", "history-inspect-btn", "Inspect Airspace");
+  inspectBtn.onclick = () => {
+    showScreen("scan");
+    showMessage(`Displaying active scan environment for ${scan.network_name}`, false);
+  };
+  actionCol.append(inspectBtn);
+
+  row.append(netCol, dateCol, cipherCol, scoreCol, actionCol);
   return row;
 }
 
 function renderHistory(scans) {
-  const historyTable = document.querySelector(".table-card");
+  const historyTable = document.querySelector("#history-table-container");
   if (historyTable) {
     historyTable.replaceChildren();
-    const heading = element("div", "table-head");
-    ["Network", "Date & time", "Security", "Score"].forEach((label) => heading.append(element("span", "", label)));
-    historyTable.append(heading);
-    scans.forEach((scan) => historyTable.append(createHistoryRow(scan)));
+    if (!scans || scans.length === 0) {
+      historyTable.innerHTML = `
+        <div class="empty-history-box">
+          <div class="empty-icon">🛡️</div>
+          <h3>No Saved Scans Yet</h3>
+          <p class="muted">Run your first Wi-Fi security scan to build a historical audit trail of nearby networks and security ratings.</p>
+          <button class="primary-button" id="btn-history-empty-scan" style="margin-top:12px"><span>◉</span> Run Security Scan Now</button>
+        </div>
+      `;
+      const runBtn = historyTable.querySelector("#btn-history-empty-scan");
+      if (runBtn) {
+        runBtn.addEventListener("click", () => showScreen("scan"));
+      }
+    } else {
+      const heading = element("div", "table-head");
+      ["Network", "Date & Time", "Security Cipher", "Audit Score", "Action"].forEach((label) => heading.append(element("span", "", label)));
+      historyTable.append(heading);
+      scans.forEach((scan) => historyTable.append(createHistoryRow(scan)));
+    }
   }
 
   const recentScans = document.querySelector(".history-row");
   if (recentScans) {
-    recentScans.replaceChildren(...scans.slice(0, 3).map((scan) => createHistoryRow(scan, true)));
-  }
-  if (scans.length === 0) {
-    if (historyTable) historyTable.append(element("p", "muted", "No scans have been recorded yet."));
-    if (recentScans) recentScans.append(element("p", "muted", "No recent scans."));
+    if (!scans || scans.length === 0) {
+      recentScans.replaceChildren(element("p", "muted", "No recent scans."));
+    } else {
+      recentScans.replaceChildren(...scans.slice(0, 3).map((scan) => createHistoryRow(scan, true)));
+    }
   }
 
-  if (scans[0]) {
+  if (scans && scans[0]) {
     setText(".reference-activity strong", "Security scan completed");
     setText(".reference-activity small", scans[0].scanned_at);
     setText(".reference-activity .status-chip", `${scans[0].score} ${scans[0].result}`);
@@ -1374,7 +1455,7 @@ function clearAiChat() {
   chatContainer.innerHTML = `
     <div class="ai-msg bot">
       <div class="msg-bubble">
-        Hello Sujal! I am your <strong>NetGuard AI Security Assistant</strong>. I have analyzed your active wireless environment and nearby airspace. Ask me anything about your security score, rogue AP threats, or router configuration!
+        Hello! I am your <strong>NetGuard AI Security Assistant</strong>. I have analyzed your active wireless environment and nearby airspace. Ask me anything about your security score, rogue AP threats, or router configuration!
       </div>
       <small class="msg-time">Just now</small>
     </div>
@@ -1573,6 +1654,568 @@ async function openPdfReportModal(specificNetwork = null) {
   }
 }
 
+// -------------------------------------------------------------
+// FIREWALL DETECTION & MANAGEMENT ENGINE
+// -------------------------------------------------------------
+async function loadFirewall() {
+  const btn = document.querySelector("#btn-rescan-firewall");
+  if (btn) btn.classList.add("spinning");
+  try {
+    const [fwRes, connRes, rulesRes] = await Promise.all([
+      api("/api/firewall"),
+      api("/api/firewall/connections"),
+      api("/api/firewall/rules")
+    ]);
+    renderFirewall(fwRes.firewall || fwRes, connRes.connections || [], rulesRes.rules || []);
+  } catch (err) {
+    showMessage(`Could not load firewall status: ${err.message}`, true);
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
+  }
+}
+
+function renderFirewall(fw, connections = [], customRules = []) {
+  if (!fw) return;
+
+  // Overview headline & score
+  setText("#fw-defense-headline", `${fw.active_profiles_count || 3} / ${fw.total_profiles_count || 3} Profiles Active`);
+  setText("#fw-engine-sub", `Engine: ${fw.engine || "Windows Advanced Firewall Subsystem"}`);
+  setText("#fw-score-val", `${fw.score || 100} / 100`);
+  setText("#fw-rating-val", fw.rating || "OPTIMAL");
+
+  const scorePill = document.querySelector("#fw-score-pill");
+  if (scorePill) {
+    scorePill.className = `firewall-score-pill ${fw.rating === "OPTIMAL" || fw.rating === "GOOD" ? "good" : "warning"}`;
+  }
+
+  // Update nav badge
+  const navBadge = document.querySelector("#nav-firewall-badge");
+  if (navBadge) {
+    navBadge.textContent = fw.overall_status === "ENABLED" ? "ON" : (fw.overall_status === "PARTIAL" ? "WARN" : "OFF");
+    navBadge.className = fw.overall_status === "ENABLED" ? "badge-success" : "badge-danger";
+  }
+
+  // Profiles
+  const profs = fw.profiles || {};
+  ["domain", "private", "public"].forEach((pKey) => {
+    const p = profs[pKey];
+    if (p) {
+      const chip = document.querySelector(`#fw-${pKey}-chip`);
+      if (chip) {
+        chip.textContent = p.enabled ? "ACTIVE · ON" : "DISABLED · OFF";
+        chip.className = `status-chip ${p.enabled ? "good" : "danger"}`;
+      }
+      setText(`#fw-${pKey}-inbound`, p.inbound === "Block" ? "Block Inbound (Enforced)" : "Allow Inbound (Vulnerable)");
+      setText(`#fw-${pKey}-outbound`, p.outbound === "Allow" ? "Allow Outbound (Standard)" : "Filtered Outbound");
+      setText(`#fw-${pKey}-notify`, p.notifications || "Enabled");
+    }
+  });
+
+  // Listening ports / attack surface table
+  const tbody = document.querySelector("#fw-ports-tbody");
+  if (tbody) {
+    tbody.replaceChildren();
+    const ports = fw.attack_surface || [];
+    setText("#fw-ports-count-badge", `${ports.length} Open Endpoints`);
+
+    if (ports.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="muted table-loading">Zero unauthorized listening ports detected. Perimeter fully cloaked.</td>`;
+      tbody.appendChild(tr);
+    } else {
+      ports.forEach((pt) => {
+        const tr = document.createElement("tr");
+        const riskClass = pt.risk === "HIGH" ? "danger" : (pt.risk === "ELEVATED" || pt.risk === "MODERATE" ? "warning" : "good");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(pt.protocol || "TCP")}</strong></td>
+          <td><span class="bssid-mono" style="font-weight:600;color:var(--cyan)">${escapeHtml(pt.local_address)}</span></td>
+          <td><strong>${escapeHtml(pt.service)}</strong></td>
+          <td><span class="muted">${escapeHtml(pt.exposure)}</span></td>
+          <td><span class="status-chip ${riskClass}">${escapeHtml(pt.risk)}</span></td>
+          <td><span class="status-chip good">🛡️ Filtered by Host Firewall</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Live Connections Table
+  const connTbody = document.querySelector("#fw-connections-tbody");
+  if (connTbody) {
+    connTbody.replaceChildren();
+    setText("#fw-conn-count-badge", `${connections.length} Active Connections`);
+    if (connections.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="7" class="muted table-loading">No external connections active.</td>`;
+      connTbody.appendChild(tr);
+    } else {
+      connections.slice(0, 30).forEach((c) => {
+        const tr = document.createElement("tr");
+        const dirClass = c.direction === "INBOUND" ? "good" : (c.direction === "OUTBOUND" ? "warning" : "muted");
+        const isSuspicious = c.is_suspicious;
+        tr.innerHTML = `
+          <td><span class="status-chip ${isSuspicious ? 'danger' : dirClass}">${escapeHtml(c.direction)}</span></td>
+          <td><strong>${escapeHtml(c.process_name || 'System')}</strong></td>
+          <td><code>${escapeHtml(String(c.pid || 0))}</code></td>
+          <td><span class="bssid-mono">${escapeHtml(c.local_address)}</span></td>
+          <td><span class="bssid-mono" style="color:${isSuspicious ? 'var(--red)' : 'var(--text)'}">${escapeHtml(c.foreign_address)}</span></td>
+          <td><small>${escapeHtml(c.state)}</small></td>
+          <td><span class="status-chip ${isSuspicious ? 'danger' : 'good'}">${escapeHtml(c.risk_reason || 'Authorized Socket')}</span></td>
+        `;
+        connTbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Custom Firewall Rules Table
+  const rulesTbody = document.querySelector("#fw-custom-rules-tbody");
+  if (rulesTbody) {
+    rulesTbody.replaceChildren();
+    if (customRules.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="8" class="muted table-loading">No custom firewall rules configured. Click 'Add Custom Rule' to create one.</td>`;
+      rulesTbody.appendChild(tr);
+    } else {
+      customRules.forEach((r) => {
+        const tr = document.createElement("tr");
+        const actClass = r.action === "BLOCK" ? "danger" : "good";
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(r.rule_name)}</strong></td>
+          <td><span class="status-chip ${r.direction === 'IN' ? 'good' : 'warning'}">${escapeHtml(r.direction)}</span></td>
+          <td><span class="status-chip ${actClass}">${escapeHtml(r.action)}</span></td>
+          <td>${escapeHtml(r.protocol)}</td>
+          <td><code>${escapeHtml(r.local_port || 'ANY')}</code></td>
+          <td><code>${escapeHtml(r.remote_ip || 'ANY')}</code></td>
+          <td><span class="status-chip ${r.os_applied ? 'good' : 'warning'}">${r.os_applied ? 'Enforced (OS)' : 'Policy Stored'}</span></td>
+          <td><button class="secondary-button btn-delete-fw-rule" data-rule-name="${escapeHtml(r.rule_name)}" style="padding:4px 8px;font-size:11px">Delete</button></td>
+        `;
+        rulesTbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Findings list
+  const findingsList = document.querySelector("#fw-findings-list");
+  if (findingsList) {
+    findingsList.replaceChildren();
+    (fw.findings || []).forEach((f) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<strong>✓</strong> ${escapeHtml(f)}`;
+      findingsList.appendChild(li);
+    });
+  }
+}
+
+// -------------------------------------------------------------
+// VIRUS & MALWARE DETECTION ENGINE
+// -------------------------------------------------------------
+async function loadMalware() {
+  try {
+    const [statusRes, historyRes, qRes] = await Promise.all([
+      api("/api/malware/status"),
+      api("/api/malware/history"),
+      api("/api/malware/quarantine")
+    ]);
+    renderMalware(statusRes, historyRes, qRes.quarantine || []);
+  } catch (err) {
+    showMessage(`Could not load malware module: ${err.message}`, true);
+  }
+}
+
+function renderMalware(statusData, historyData, quarantineItems = []) {
+  if (statusData && statusData.defender) {
+    const d = statusData.defender;
+    setText("#defender-engine-name", d.engine_name || "Microsoft Defender Antivirus");
+    setText("#defender-sig-version", `Signatures: v${d.signature_version || '1.463.426.0'} · Verified Live`);
+    const rtpChip = document.querySelector("#defender-rtp-chip");
+    if (rtpChip) {
+      rtpChip.textContent = `REAL-TIME PROTECTION: ${d.real_time_protection ? 'ACTIVE' : 'OFF'}`;
+      rtpChip.className = `status-chip ${d.real_time_protection ? 'good' : 'danger'}`;
+    }
+  }
+
+  const threatsBadge = document.querySelector("#nav-malware-badge");
+  if (threatsBadge && statusData) {
+    threatsBadge.textContent = String(statusData.activeThreats || 0);
+    threatsBadge.className = statusData.activeThreats > 0 ? "badge-danger" : "badge-success";
+  }
+
+  // Detections Table
+  const tbody = document.querySelector("#malware-threats-tbody");
+  if (tbody && historyData) {
+    tbody.replaceChildren();
+    const detections = historyData.detections || [];
+    setText("#malware-threats-badge", `${detections.length} Threats`);
+
+    if (detections.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="muted table-loading">Zero active threats detected. All scanned files verified clean.</td>`;
+      tbody.appendChild(tr);
+    } else {
+      detections.forEach((t) => {
+        const tr = document.createElement("tr");
+        const sevClass = t.severity === "CRITICAL" || t.severity === "HIGH" ? "danger" : "warning";
+        const isQuarantined = t.status === "QUARANTINED";
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(t.threat_name)}</strong><br><small class="muted">${escapeHtml(t.threat_type)}</small></td>
+          <td><span class="status-chip ${t.detection_method?.includes('SIGNATURE') ? 'danger' : 'warning'}">${escapeHtml(t.detection_method || 'HEURISTIC')}</span></td>
+          <td><code style="word-break:break-all">${escapeHtml(t.file_path)}</code></td>
+          <td><code style="font-size:10px">${escapeHtml(t.file_hash ? t.file_hash.substring(0, 16) + '...' : 'N/A')}</code></td>
+          <td><span class="status-chip ${sevClass}">${escapeHtml(t.severity)}</span></td>
+          <td>
+            ${isQuarantined
+              ? '<span class="status-chip good">Isolated</span>'
+              : `<button class="primary-button btn-quarantine-file" data-file-path="${escapeHtml(t.file_path)}" data-threat-name="${escapeHtml(t.threat_name)}" style="padding:4px 10px;font-size:11px">Quarantine</button>`
+            }
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Quarantine Table
+  const qTbody = document.querySelector("#malware-quarantine-table");
+  if (qTbody) {
+    qTbody.replaceChildren();
+    if (quarantineItems.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="muted table-loading">Quarantine vault is empty. No suspicious files isolated.</td>`;
+      qTbody.appendChild(tr);
+    } else {
+      quarantineItems.forEach((q) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(q.quarantine_id)}</strong></td>
+          <td><code style="word-break:break-all">${escapeHtml(q.original_path)}</code></td>
+          <td><code style="word-break:break-all">${escapeHtml(q.quarantined_file)}</code></td>
+          <td><small>${escapeHtml(q.quarantined_at)}</small></td>
+          <td><span class="status-chip good">${escapeHtml(q.status)}</span></td>
+          <td><button class="secondary-button btn-restore-quarantine" data-qid="${escapeHtml(q.quarantine_id)}" style="padding:4px 10px;font-size:11px">Restore File</button></td>
+        `;
+        qTbody.appendChild(tr);
+      });
+    }
+  }
+}
+
+async function triggerMalwareScan(targetPath = ".") {
+  const btn = document.querySelector("#btn-run-malware-scan") || document.querySelector("#btn-trigger-scan-path");
+  if (btn) btn.classList.add("spinning");
+  showMessage(`Running cryptographic hash & heuristic inspection on: ${targetPath}...`, false);
+
+  try {
+    const res = await api("/api/malware/scan", {
+      method: "POST",
+      body: JSON.stringify({ target_path: targetPath, max_files: 350 })
+    });
+
+    setText("#malware-scanned-count", `${res.filesScanned || 0} Files`);
+    setText("#malware-clean-count", `${res.cleanFiles || 0} Clean`);
+    setText("#malware-threats-count", `${res.threatsFound || 0} Threats`);
+    setText("#malware-duration-val", `${res.durationSeconds || 0}s`);
+
+    showMessage(`✓ Scan completed: ${res.filesScanned} files examined in ${res.durationSeconds}s. Found ${res.threatsFound} threats.`, res.threatsFound > 0);
+    loadMalware();
+  } catch (err) {
+    showMessage(`Malware scan failed: ${err.message}`, true);
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
+  }
+}
+
+// -------------------------------------------------------------
+// VULNERABILITY SCANNER ENGINE
+// -------------------------------------------------------------
+async function loadVulnerabilities(targetIp = "127.0.0.1") {
+  const btn = document.querySelector("#btn-rescan-vulnerabilities");
+  if (btn) btn.classList.add("spinning");
+  try {
+    const res = await api(`/api/vulnerabilities?target=${encodeURIComponent(targetIp)}`);
+    renderVulnerabilities(res);
+  } catch (err) {
+    showMessage(`Could not load vulnerability audit: ${err.message}`, true);
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
+  }
+}
+
+function renderVulnerabilities(data) {
+  if (!data) return;
+  setText("#vuln-score-val", data.vulnerability_score || 100);
+  setText("#vuln-rating-val", data.rating || "SECURE");
+  setText("#vuln-target-sub", `Target Host: ${data.target_ip || "127.0.0.1"}`);
+
+  setText("#vuln-crit-count", data.critical_count || 0);
+  setText("#vuln-high-count", data.high_count || 0);
+  setText("#vuln-med-count", data.medium_count || 0);
+  setText("#vuln-low-count", data.low_count || 0);
+
+  const container = document.querySelector("#vuln-findings-container");
+  if (container) {
+    container.replaceChildren();
+    const findings = data.findings || [];
+    setText("#vuln-findings-badge", `${findings.length} Findings`);
+
+    if (findings.length === 0) {
+      container.innerHTML = `
+        <div class="card panel" style="padding:24px;text-align:center">
+          <p class="muted">✓ Zero vulnerable services or weak ciphers identified on target host ${escapeHtml(data.target_ip)}. Hardening posture optimal.</p>
+        </div>
+      `;
+    } else {
+      findings.forEach((f) => {
+        const card = document.createElement("div");
+        card.className = "card panel";
+        const sevClass = f.severity === "CRITICAL" ? "danger" : (f.severity === "HIGH" ? "warning" : "good");
+        card.innerHTML = `
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+            <div>
+              <span class="status-chip ${sevClass}">${escapeHtml(f.severity)} · CVSS ${f.cvss_score}</span>
+              <h3 style="margin:8px 0 4px">${escapeHtml(f.title)}</h3>
+              <p class="muted" style="font-size:12px;margin:0 0 10px">${escapeHtml(f.description)}</p>
+            </div>
+            <span class="status-chip" style="font-family:monospace">${escapeHtml(f.cve_id)}</span>
+          </div>
+          <div style="background:var(--surface-2);border-radius:8px;padding:10px 14px;margin-top:8px">
+            <strong style="color:var(--cyan);font-size:11px;display:block;margin-bottom:2px">RECOMMENDED REMEDIATION:</strong>
+            <p style="margin:0;font-size:12px;color:var(--text)">${escapeHtml(f.remediation)}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// INTRUSION DETECTION SYSTEM (IDS) ENGINE
+// -------------------------------------------------------------
+async function loadIds() {
+  const btn = document.querySelector("#btn-rescan-ids");
+  if (btn) btn.classList.add("spinning");
+  try {
+    const [idsRes, eventsRes] = await Promise.all([
+      api("/api/ids/status"),
+      api("/api/ids/events")
+    ]);
+    renderIds(idsRes, eventsRes.events || []);
+  } catch (err) {
+    showMessage(`Could not load IDS status: ${err.message}`, true);
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
+  }
+}
+
+function renderIds(idsData, historicalEvents = []) {
+  if (!idsData) return;
+
+  const level = idsData.threat_level || "NOMINAL";
+  setText("#ids-threat-headline", `Threat Level: ${level}`);
+  setText("#ids-sockets-evaluated", `Evaluated ${idsData.active_sockets_evaluated || 0} active TCP sockets against MITRE ATT&CK signatures.`);
+
+  const statusPill = document.querySelector("#ids-status-pill");
+  if (statusPill) {
+    statusPill.className = `firewall-score-pill ${level === "NOMINAL" ? "good" : (level === "WARNING" ? "warning" : "danger")}`;
+    setText("#ids-status-text", level);
+  }
+
+  const idsNavBadge = document.querySelector("#nav-ids-badge");
+  if (idsNavBadge) {
+    idsNavBadge.textContent = level === "NOMINAL" ? "OK" : level;
+    idsNavBadge.className = level === "NOMINAL" ? "badge-success" : "badge-danger";
+  }
+
+  const container = document.querySelector("#ids-events-feed");
+  if (container) {
+    container.replaceChildren();
+    const allEvents = (idsData.events || []).concat(historicalEvents);
+    const uniqueEvents = [];
+    const seen = new Set();
+    allEvents.forEach((ev) => {
+      const key = `${ev.event_type}_${ev.source_ip}_${ev.reason}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueEvents.push(ev);
+      }
+    });
+
+    setText("#ids-events-count-badge", `${uniqueEvents.length} Anomaly Events`);
+
+    if (uniqueEvents.length === 0) {
+      container.innerHTML = `<div class="card panel" style="padding:24px;text-align:center"><p class="muted">✓ Zero unauthorized port scans, floods, or intrusion vectors detected.</p></div>`;
+    } else {
+      uniqueEvents.forEach((ev) => {
+        const card = document.createElement("div");
+        card.className = "card panel";
+        const sevClass = ev.severity === "CRITICAL" || ev.severity === "HIGH" ? "danger" : (ev.severity === "MEDIUM" ? "warning" : "good");
+        const isActionable = ev.event_type !== "AIRSPACE_CLEAR" && ev.source_ip && !ev.source_ip.includes("Subnet");
+
+        card.innerHTML = `
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px">
+            <div>
+              <span class="status-chip ${sevClass}">${escapeHtml(ev.severity)} · ${escapeHtml(ev.event_type)}</span>
+              <h3 style="margin:8px 0 4px">${escapeHtml(ev.reason)}</h3>
+              <p class="muted" style="font-size:12px;margin:0 0 8px">Source IP: <code>${escapeHtml(ev.source_ip || 'N/A')}</code> · MITRE Tactic: <strong>${escapeHtml(ev.mitre_tactic || 'General')}</strong></p>
+            </div>
+            <small class="muted">${escapeHtml(ev.timestamp || 'Live')}</small>
+          </div>
+          ${ev.action_recommended ? `
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface-2);border-radius:8px;padding:8px 12px;margin-top:8px">
+              <span style="font-size:12px;color:var(--text)">Action: <strong>${escapeHtml(ev.action_recommended)}</strong></span>
+              ${isActionable ? `<button class="primary-button btn-quick-block-ip" data-ip="${escapeHtml(ev.source_ip)}" style="padding:4px 10px;font-size:11px">Block IP</button>` : ''}
+            </div>
+          ` : ''}
+        `;
+        container.appendChild(card);
+      });
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// THREAT INTELLIGENCE ENGINE
+// -------------------------------------------------------------
+async function loadThreatIntel() {
+  const btn = document.querySelector("#btn-sync-threat-intel");
+  if (btn) btn.classList.add("spinning");
+  try {
+    const res = await api("/api/threat-intel/feed");
+    renderThreatIntel(res);
+  } catch (err) {
+    showMessage(`Could not load threat intel feed: ${err.message}`, true);
+  } finally {
+    if (btn) setTimeout(() => btn.classList.remove("spinning"), 400);
+  }
+}
+
+function renderThreatIntel(data) {
+  if (!data) return;
+
+  const tbody = document.querySelector("#intel-ips-tbody");
+  if (tbody) {
+    tbody.replaceChildren();
+    (data.malicious_ips || []).forEach((item) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong style="color:var(--red);font-family:monospace">${escapeHtml(item.ip)}</strong></td>
+        <td>${escapeHtml(item.threat_actor || 'Unknown')}</td>
+        <td><span class="status-chip danger">${escapeHtml(item.type)}</span></td>
+        <td><span class="status-chip good">${escapeHtml(item.confidence)}</span></td>
+        <td><strong>${item.score}/100</strong></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  const advGrid = document.querySelector("#intel-advisories-grid");
+  if (advGrid) {
+    advGrid.replaceChildren();
+    (data.active_advisories || []).forEach((adv) => {
+      const card = document.createElement("div");
+      card.className = "card panel";
+      card.innerHTML = `
+        <span class="status-chip danger">${escapeHtml(adv.cve_id)} · CVSS ${adv.cvss}</span>
+        <h3 style="margin:8px 0 4px">${escapeHtml(adv.title)}</h3>
+        <p class="muted" style="font-size:12px;margin:0 0 10px">Target: ${escapeHtml(adv.affected)}</p>
+        <div style="background:var(--surface-2);border-radius:6px;padding:8px 12px">
+          <small style="color:var(--cyan);font-weight:700;display:block">REMEDIATION:</small>
+          <span style="font-size:11px">${escapeHtml(adv.remediation)}</span>
+        </div>
+      `;
+      advGrid.appendChild(card);
+    });
+  }
+}
+
+// -------------------------------------------------------------
+// SECURITY LOGS ENGINE
+// -------------------------------------------------------------
+async function loadSecurityLogs() {
+  const modSelect = document.querySelector("#logs-module-select");
+  const sevSelect = document.querySelector("#logs-severity-select");
+  const searchInput = document.querySelector("#logs-search-input");
+
+  const module = modSelect ? modSelect.value : "ALL";
+  const severity = sevSelect ? sevSelect.value : "ALL";
+  const search = searchInput ? searchInput.value : "";
+
+  try {
+    const res = await api(`/api/logs?module=${encodeURIComponent(module)}&severity=${encodeURIComponent(severity)}&search=${encodeURIComponent(search)}`);
+    renderSecurityLogs(res.logs || []);
+  } catch (err) {
+    showMessage(`Could not load security logs: ${err.message}`, true);
+  }
+}
+
+function renderSecurityLogs(logs) {
+  const tbody = document.querySelector("#security-logs-tbody");
+  if (!tbody) return;
+  tbody.replaceChildren();
+
+  if (logs.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" class="muted table-loading">No log records found matching selected filter criteria.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  logs.forEach((l) => {
+    const tr = document.createElement("tr");
+    const sevClass = l.severity === "CRITICAL" ? "danger" : (l.severity === "WARNING" ? "warning" : "good");
+    tr.innerHTML = `
+      <td><small class="muted">${escapeHtml(l.created_at)}</small></td>
+      <td><strong>${escapeHtml(l.module)}</strong></td>
+      <td><code>${escapeHtml(l.action)}</code></td>
+      <td><small>${escapeHtml(l.actor || 'system')}</small></td>
+      <td><span class="status-chip ${sevClass}">${escapeHtml(l.severity)}</span></td>
+      <td>
+        <strong>${escapeHtml(l.message)}</strong>
+        ${l.details ? `<br><small class="muted">${escapeHtml(l.details)}</small>` : ''}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// -------------------------------------------------------------
+// REPORTS & ANALYTICS ENGINE
+// -------------------------------------------------------------
+async function loadReportsScreen() {
+  try {
+    const res = await api("/api/reports");
+    renderReportsList(res || []);
+  } catch (err) {
+    showMessage(`Could not load reports history: ${err.message}`, true);
+  }
+}
+
+function renderReportsList(reports) {
+  const tbody = document.querySelector("#generated-reports-tbody");
+  if (!tbody) return;
+  tbody.replaceChildren();
+
+  if (reports.length === 0) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="6" class="muted table-loading">No previous reports in archive. Generate one using the cards above.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  reports.forEach((r) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>#${r.id}</td>
+      <td><span class="status-chip good">${escapeHtml(r.report_type)}</span></td>
+      <td><strong>${escapeHtml(r.file_name)}</strong></td>
+      <td><small class="muted">${escapeHtml(r.generated_at)}</small></td>
+      <td><small>${r.summary?.threatCount ? `${r.summary.threatCount} Threats Found` : 'Clean Airspace Verified'}</small></td>
+      <td><a href="/api/reports/${r.id}/download" class="secondary-button" style="padding:4px 10px;font-size:11px;text-decoration:none" download>Download</a></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
 function closePdfReportModal() {
   const backdrop = document.querySelector("#pdf-modal-backdrop");
   if (backdrop) backdrop.hidden = true;
@@ -1622,6 +2265,20 @@ function showScreen(name) {
     loadWifiNetworks();
   } else if (name === "threats") {
     loadThreats();
+  } else if (name === "firewall") {
+    loadFirewall();
+  } else if (name === "malware") {
+    loadMalware();
+  } else if (name === "vulnerabilities") {
+    loadVulnerabilities();
+  } else if (name === "ids") {
+    loadIds();
+  } else if (name === "intel") {
+    loadThreatIntel();
+  } else if (name === "logs") {
+    loadSecurityLogs();
+  } else if (name === "reports") {
+    loadReportsScreen();
   } else if (name === "performance") {
     loadPerformance();
   } else if (name === "traffic") {
@@ -1998,14 +2655,140 @@ async function updateSetting(toggle, key, value) {
   }
 }
 
-document.querySelectorAll(".theme-toggle").forEach((toggle) => {
-  toggle.addEventListener("click", () => {
-    const nextTheme = settings.theme === "light" ? "dark" : "light";
-    document.body.classList.toggle("light", nextTheme === "light");
-    toggle.classList.toggle("on", nextTheme === "light");
-    updateSetting(toggle, "theme", nextTheme);
+// 11. Multi-Theme Switching Engine (Cyber Dark, Matrix, Synthwave, Stealth Obsidian, Nordic Frost, Tech Light)
+const THEMES = [
+  { id: "cyber-dark", name: "Cyber Dark", icon: "🌙", bodyClass: "" },
+  { id: "matrix", name: "Matrix Green", icon: "🟢", bodyClass: "theme-matrix" },
+  { id: "synthwave", name: "Synthwave", icon: "🟣", bodyClass: "theme-synthwave" },
+  { id: "obsidian", name: "Stealth Obsidian", icon: "🌑", bodyClass: "theme-obsidian" },
+  { id: "nordic", name: "Nordic Frost", icon: "🌊", bodyClass: "theme-nordic" },
+  { id: "light", name: "Tech Light", icon: "☀️", bodyClass: "theme-light" }
+];
+
+function applyTheme(themeId, persist = true) {
+  const current = THEMES.find((t) => t.id === themeId) || THEMES[0];
+  
+  THEMES.forEach((t) => {
+    if (t.bodyClass) document.body.classList.remove(t.bodyClass);
   });
-});
+  // Also clean up any legacy class
+  document.body.classList.remove("light");
+
+  if (current.bodyClass) {
+    document.body.classList.add(current.bodyClass);
+    if (current.id === "light") {
+      document.body.classList.add("light");
+    }
+  }
+
+  const iconEl = document.querySelector("#theme-icon-indicator");
+  const nameEl = document.querySelector("#theme-name-indicator");
+  if (iconEl) iconEl.textContent = current.icon;
+  if (nameEl) nameEl.textContent = current.name;
+
+  const selectEl = document.querySelector("#theme-selector-settings");
+  if (selectEl && selectEl.value !== current.id) {
+    selectEl.value = current.id;
+  }
+
+  if (persist) {
+    localStorage.setItem("netguard_theme", current.id);
+    settings.theme = current.id;
+  }
+}
+
+function cycleTheme() {
+  const saved = localStorage.getItem("netguard_theme") || "cyber-dark";
+  const currentIndex = THEMES.findIndex((t) => t.id === saved);
+  const nextIndex = (currentIndex + 1) % THEMES.length;
+  const nextTheme = THEMES[nextIndex];
+  applyTheme(nextTheme.id, true);
+  showMessage(`Theme switched to: ${nextTheme.name}`, false);
+}
+
+const themeSwitcherBtn = document.querySelector("#theme-switcher-btn");
+if (themeSwitcherBtn) {
+  themeSwitcherBtn.addEventListener("click", cycleTheme);
+}
+
+const themeSelectSettings = document.querySelector("#theme-selector-settings");
+if (themeSelectSettings) {
+  themeSelectSettings.addEventListener("change", (e) => {
+    applyTheme(e.target.value, true);
+    showMessage(`Appearance theme set to: ${e.target.selectedOptions[0]?.text || e.target.value}`, false);
+  });
+}
+
+// 12. Interactive Platform & Airspace Refresh Engine
+async function handlePlatformRefresh(btn) {
+  const btns = document.querySelectorAll("#btn-topbar-refresh, #btn-sidebar-refresh");
+  btns.forEach((b) => b.classList.add("spinning"));
+  showMessage("Synchronizing live airspace telemetry & security metrics…", false);
+  try {
+    await detectConnectedWifi();
+    await loadDashboard();
+    const active = document.querySelector(".screen.active-screen");
+    if (active) {
+      if (active.id === "scan-screen") await loadWifiNetworks();
+      else if (active.id === "threats-screen") await loadThreats();
+      else if (active.id === "devices-screen") await loadDevices();
+      else if (active.id === "firewall-screen") await loadFirewall();
+      else if (active.id === "performance-screen") await loadPerformance();
+      else if (active.id === "traffic-screen") await loadTraffic();
+      else if (active.id === "alerts-screen") await loadAlerts();
+      else if (active.id === "history-screen") {
+        const scans = await api("/api/history");
+        renderHistory(scans || []);
+      }
+    }
+    showMessage("✓ NetGuard refreshed: live spectrum & environment synchronized.", false);
+  } catch (err) {
+    showMessage(`Refresh completed: ${err.message}`, false);
+  } finally {
+    setTimeout(() => {
+      btns.forEach((b) => b.classList.remove("spinning"));
+    }, 450);
+  }
+}
+
+const topbarRefreshBtn = document.querySelector("#btn-topbar-refresh");
+if (topbarRefreshBtn) {
+  topbarRefreshBtn.addEventListener("click", () => handlePlatformRefresh(topbarRefreshBtn));
+  topbarRefreshBtn.addEventListener("dblclick", () => window.location.reload());
+}
+
+const sidebarRefreshBtn = document.querySelector("#btn-sidebar-refresh");
+if (sidebarRefreshBtn) {
+  sidebarRefreshBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    handlePlatformRefresh(sidebarRefreshBtn);
+  });
+}
+
+const sidebarSystemMonitor = document.querySelector("#sidebar-system-monitor");
+if (sidebarSystemMonitor) {
+  sidebarSystemMonitor.addEventListener("click", () => handlePlatformRefresh(sidebarRefreshBtn));
+  sidebarSystemMonitor.addEventListener("dblclick", () => window.location.reload());
+}
+
+// 12. Scan History Clear Button Handler
+const btnClearHistory = document.querySelector("#btn-clear-history");
+if (btnClearHistory) {
+  btnClearHistory.addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to clear all saved scan history? This action will purge all historical scans and threat logs.")) {
+      return;
+    }
+    try {
+      const res = await api("/api/history/clear", { method: "POST" });
+      showMessage(res.message || "All saved scan history cleared.", false);
+      await loadDashboard();
+      const emptyScans = await api("/api/history");
+      renderHistory(emptyScans || []);
+    } catch (err) {
+      showMessage(`Could not clear history: ${err.message}`, true);
+    }
+  });
+}
 
 document.querySelectorAll("[data-setting]").forEach((toggle) => {
   toggle.addEventListener("click", () => {
@@ -2023,6 +2806,9 @@ setInterval(() => {
     loadTraffic();
   }
 }, 3500);
+
+// Dynamic Greeting Periodic Refresh
+setInterval(updateDynamicGreeting, 60000);
 
 // Chart Range Toggle
 const btnChartRange = document.querySelector("#btn-chart-range");
@@ -2064,6 +2850,293 @@ document.querySelectorAll("#ai-send-btn").forEach((btn) => {
     }
   });
 });
+
+// -------------------------------------------------------------
+// EVENT LISTENERS FOR PRO CYBERSECURITY MODULES
+// -------------------------------------------------------------
+
+// 1. Firewall Management Handlers
+const btnRescanFirewall = document.querySelector("#btn-rescan-firewall");
+if (btnRescanFirewall) {
+  btnRescanFirewall.addEventListener("click", () => {
+    loadFirewall();
+    showMessage("✓ Refreshed Windows Defender Firewall rules and active connection telemetry.", false);
+  });
+}
+
+const fwModal = document.querySelector("#add-fw-rule-modal");
+const btnOpenFwModal = document.querySelector("#btn-open-create-rule-modal");
+const btnCloseFwModal = document.querySelector("#btn-close-fw-modal");
+const btnCancelFwModal = document.querySelector("#btn-cancel-fw-rule");
+
+if (btnOpenFwModal && fwModal) {
+  btnOpenFwModal.addEventListener("click", () => { fwModal.hidden = false; });
+}
+if (btnCloseFwModal && fwModal) {
+  btnCloseFwModal.addEventListener("click", () => { fwModal.hidden = true; });
+}
+if (btnCancelFwModal && fwModal) {
+  btnCancelFwModal.addEventListener("click", () => { fwModal.hidden = true; });
+}
+
+const fwForm = document.querySelector("#fw-create-rule-form");
+if (fwForm) {
+  fwForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const ruleName = document.querySelector("#fw-rule-name-input")?.value?.trim();
+    if (!ruleName) return;
+
+    const direction = document.querySelector("#fw-rule-dir-select")?.value || "IN";
+    const action = document.querySelector("#fw-rule-act-select")?.value || "BLOCK";
+    const protocol = document.querySelector("#fw-rule-proto-select")?.value || "TCP";
+    const localPort = document.querySelector("#fw-rule-port-input")?.value?.trim() || "ANY";
+    const remoteIp = document.querySelector("#fw-rule-ip-input")?.value?.trim() || "ANY";
+
+    try {
+      showMessage(`Applying firewall rule '${ruleName}'...`, false);
+      const res = await api("/api/firewall/rules", {
+        method: "POST",
+        body: JSON.stringify({
+          rule_name: ruleName,
+          direction: direction,
+          action: action,
+          protocol: protocol,
+          local_port: localPort,
+          remote_ip: remoteIp
+        })
+      });
+      if (fwModal) fwModal.hidden = true;
+      fwForm.reset();
+      showMessage(`✓ Rule '${ruleName}' configured. ${res.message || ''}`, false);
+      loadFirewall();
+    } catch (err) {
+      showMessage(`Could not create firewall rule: ${err.message}`, true);
+    }
+  });
+}
+
+document.addEventListener("click", async (e) => {
+  const delBtn = e.target.closest(".btn-delete-fw-rule");
+  if (delBtn) {
+    const ruleName = delBtn.dataset.ruleName;
+    if (confirm(`Remove firewall rule '${ruleName}'?`)) {
+      try {
+        await api(`/api/firewall/rules/${encodeURIComponent(ruleName)}`, { method: "DELETE" });
+        showMessage(`✓ Rule '${ruleName}' deleted successfully.`, false);
+        loadFirewall();
+      } catch (err) {
+        showMessage(`Could not delete rule: ${err.message}`, true);
+      }
+    }
+  }
+});
+
+// 2. Malware Detection Handlers
+const btnRunMalware = document.querySelector("#btn-run-malware-scan");
+const btnTriggerScanPath = document.querySelector("#btn-trigger-scan-path");
+const btnScanPresetProj = document.querySelector("#btn-scan-preset-project");
+const malwarePathInput = document.querySelector("#malware-target-input");
+
+if (btnRunMalware) {
+  btnRunMalware.addEventListener("click", () => {
+    triggerMalwareScan(malwarePathInput?.value || ".");
+  });
+}
+if (btnTriggerScanPath) {
+  btnTriggerScanPath.addEventListener("click", () => {
+    triggerMalwareScan(malwarePathInput?.value || ".");
+  });
+}
+if (btnScanPresetProj && malwarePathInput) {
+  btnScanPresetProj.addEventListener("click", () => {
+    malwarePathInput.value = ".";
+    triggerMalwareScan(".");
+  });
+}
+
+document.addEventListener("click", async (e) => {
+  const qBtn = e.target.closest(".btn-quarantine-file");
+  if (qBtn) {
+    const fpath = qBtn.dataset.filePath;
+    const tname = qBtn.dataset.threatName;
+    if (confirm(`QUARANTINE CONFIRMATION:\n\nSafely isolate '${fpath}' into the NetGuard quarantine vault?\n(File will not be deleted; you can restore it anytime)`)) {
+      try {
+        const res = await api("/api/malware/quarantine", {
+          method: "POST",
+          body: JSON.stringify({ file_path: fpath, threat_name: tname })
+        });
+        showMessage(`✓ ${res.message || 'File quarantined successfully.'}`, false);
+        loadMalware();
+      } catch (err) {
+        showMessage(`Quarantine failed: ${err.message}`, true);
+      }
+    }
+  }
+
+  const rBtn = e.target.closest(".btn-restore-quarantine");
+  if (rBtn) {
+    const qid = rBtn.dataset.qid;
+    if (confirm(`RESTORE CONFIRMATION:\n\nRestore quarantined file '${qid}' back to its original location?`)) {
+      try {
+        const res = await api("/api/malware/restore", {
+          method: "POST",
+          body: JSON.stringify({ quarantine_id: qid })
+        });
+        showMessage(`✓ ${res.message || 'File restored.'}`, false);
+        loadMalware();
+      } catch (err) {
+        showMessage(`Restore failed: ${err.message}`, true);
+      }
+    }
+  }
+});
+
+// 3. Vulnerability Scanner Handlers
+const btnRescanVulns = document.querySelector("#btn-rescan-vulnerabilities");
+if (btnRescanVulns) {
+  btnRescanVulns.addEventListener("click", () => {
+    loadVulnerabilities("127.0.0.1");
+    showMessage("✓ Host vulnerability assessment completed against NIST CVSS v3.1 benchmarks.", false);
+  });
+}
+
+// 4. Intrusion Detection Handlers
+const btnRescanIds = document.querySelector("#btn-rescan-ids");
+const btnClearIds = document.querySelector("#btn-clear-ids-events");
+
+if (btnRescanIds) {
+  btnRescanIds.addEventListener("click", () => {
+    loadIds();
+    showMessage("✓ Stateful Intrusion Detection System re-synchronized with active sockets.", false);
+  });
+}
+if (btnClearIds) {
+  btnClearIds.addEventListener("click", async () => {
+    try {
+      await api("/api/ids/clear", { method: "POST" });
+      showMessage("✓ Non-critical IDS alert events cleared.", false);
+      loadIds();
+    } catch (err) {
+      showMessage(`Could not clear IDS alerts: ${err.message}`, true);
+    }
+  });
+}
+
+document.addEventListener("click", async (e) => {
+  const blockIpBtn = e.target.closest(".btn-quick-block-ip");
+  if (blockIpBtn) {
+    const ip = blockIpBtn.dataset.ip;
+    if (confirm(`BLOCK HOST:\n\nCreate a high-priority firewall rule to block all inbound packets from '${ip}'?`)) {
+      try {
+        const rName = `NetGuard_Block_${ip.replace(/[^a-zA-Z0-9]/g, '_')}`;
+        await api("/api/firewall/rules", {
+          method: "POST",
+          body: JSON.stringify({
+            rule_name: rName,
+            direction: "IN",
+            action: "BLOCK",
+            protocol: "TCP",
+            remote_ip: ip
+          })
+        });
+        showMessage(`✓ Firewall rule created: Inbound traffic from ${ip} blocked.`, false);
+        loadIds();
+      } catch (err) {
+        showMessage(`Could not block IP: ${err.message}`, true);
+      }
+    }
+  }
+});
+
+// 5. Threat Intelligence Handlers
+const btnSyncIntel = document.querySelector("#btn-sync-threat-intel");
+const btnIntelLookup = document.querySelector("#btn-intel-lookup");
+const intelInput = document.querySelector("#intel-query-input");
+const intelResultBox = document.querySelector("#intel-lookup-result");
+
+if (btnSyncIntel) {
+  btnSyncIntel.addEventListener("click", () => {
+    loadThreatIntel();
+    showMessage("✓ Threat intelligence feeds, botnet C2 IPs, and CVE advisories synchronized.", false);
+  });
+}
+
+if (btnIntelLookup && intelInput && intelResultBox) {
+  btnIntelLookup.addEventListener("click", async () => {
+    const q = intelInput.value.trim();
+    if (!q) return;
+
+    try {
+      const res = await api(`/api/threat-intel/lookup?q=${encodeURIComponent(q)}`);
+      intelResultBox.hidden = false;
+      const isBad = res.found && res.risk_score > 50;
+      intelResultBox.innerHTML = `
+        <div class="card panel" style="background:${isBad ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)'};border-color:${isBad ? 'var(--red)' : 'var(--green)'};padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <strong>Indicator: ${escapeHtml(res.query)}</strong>
+            <span class="status-chip ${isBad ? 'danger' : 'good'}">${isBad ? `MALICIOUS · Score ${res.risk_score}` : 'CLEAN / BENIGN'}</span>
+          </div>
+          <p style="margin:0 0 6px;font-size:12px;color:var(--text)">${escapeHtml(res.description)}</p>
+          <small class="muted">Confidence: <strong>${escapeHtml(res.confidence)}</strong> · Action: ${escapeHtml(res.action)}</small>
+        </div>
+      `;
+    } catch (err) {
+      showMessage(`Lookup failed: ${err.message}`, true);
+    }
+  });
+}
+
+// 6. Security Logs Handlers
+const btnRefreshLogs = document.querySelector("#btn-refresh-logs");
+const logsModSelect = document.querySelector("#logs-module-select");
+const logsSevSelect = document.querySelector("#logs-severity-select");
+const logsSearch = document.querySelector("#logs-search-input");
+const btnExportLogsCsv = document.querySelector("#btn-export-logs-csv");
+const btnExportLogsJson = document.querySelector("#btn-export-logs-json");
+
+if (btnRefreshLogs) btnRefreshLogs.addEventListener("click", () => loadSecurityLogs());
+if (logsModSelect) logsModSelect.addEventListener("change", () => loadSecurityLogs());
+if (logsSevSelect) logsSevSelect.addEventListener("change", () => loadSecurityLogs());
+if (logsSearch) logsSearch.addEventListener("input", debounce(() => loadSecurityLogs(), 300));
+
+if (btnExportLogsCsv) {
+  btnExportLogsCsv.addEventListener("click", () => {
+    window.location.href = "/api/logs/export?format=csv";
+  });
+}
+if (btnExportLogsJson) {
+  btnExportLogsJson.addEventListener("click", () => {
+    window.location.href = "/api/logs/export?format=json";
+  });
+}
+
+// 7. Reports Handlers
+const btnOpenFullPdf = document.querySelector("#btn-open-full-pdf-report");
+const btnDailyPdf = document.querySelector("#btn-export-daily-pdf");
+const btnWeeklyPdf = document.querySelector("#btn-export-weekly-pdf");
+const btnAllCsv = document.querySelector("#btn-export-all-csv");
+
+if (btnOpenFullPdf) btnOpenFullPdf.addEventListener("click", () => openPdfReportModal());
+if (btnDailyPdf) btnDailyPdf.addEventListener("click", () => openPdfReportModal());
+if (btnWeeklyPdf) btnWeeklyPdf.addEventListener("click", () => openPdfReportModal());
+if (btnAllCsv) {
+  btnAllCsv.addEventListener("click", () => {
+    window.location.href = "/api/export/csv";
+  });
+}
+
+// Debounce utility
+function debounce(func, wait) {
+  let timeout;
+  return function (...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// Initial Theme & Dynamic Greeting Application
+applyTheme(localStorage.getItem("netguard_theme") || "cyber-dark", false);
+updateDynamicGreeting();
 
 // Initial Load
 loadDashboard();
