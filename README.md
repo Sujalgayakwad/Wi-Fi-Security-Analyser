@@ -224,7 +224,7 @@ Complete discovery of nearby SSIDs, hardware BSSIDs, OUI manufacturer resolution
 ### 📜 3. Scan History, Audit Trail & Database Management
 Historical audit log of all network scans, timestamps, ciphers, ratings, with 1-click **Clear History** and export tools.
 <p align="center">
-  <img src="screenshots/history.jpeg" alt="Scan History" width="95%">
+  <img src="screenshots/history.png" alt="Scan History" width="95%">
 </p>
 
 ---
