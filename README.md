@@ -212,13 +212,13 @@ Once running, navigate to:
 ### 🛡️ 1. Real-Time Cybersecurity Dashboard & Spectrum Health
 Live monitoring of connected Wi-Fi parameters, security grading (0–100), active rogue threat counts, and quick cybersecurity actions.
 <p align="center">
-  <img src="screenshots/dashboard.png.jpeg" alt="NetGuard Dashboard" width="95%">
+  <img src="screenshots/dashboard.png" alt="NetGuard Dashboard" width="95%">
 </p>
 
 ### 📡 2. 802.11 Airspace Access Point Audit Matrix
 Complete discovery of nearby SSIDs, hardware BSSIDs, OUI manufacturer resolution, signal RSSI (dBm), encryption suites, and threat grade classifications.
 <p align="center">
-  <img src="screenshots/networks.png.jpeg" alt="Network Analysis" width="95%">
+  <img src="screenshots/networks.png" alt="Network Analysis" width="95%">
 </p>
 
 ### 📜 3. Scan History, Audit Trail & Database Management
